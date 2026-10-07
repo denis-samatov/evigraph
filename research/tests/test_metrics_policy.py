@@ -5,6 +5,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from evigraph_research import metrics, policy
+from evigraph_research.compare import WeightedCertifier
 from evigraph_research.dedup import UnionFind, shingles
 from evigraph_research.prepare import normalize_text
 
@@ -118,3 +119,26 @@ def test_ece_topk_ignores_easy_negatives() -> None:
     assert metrics.expected_calibration_error_topk(prob, y, 1) > metrics.expected_calibration_error(
         prob, y
     )
+
+
+@settings(max_examples=25, deadline=None)
+@given(st.integers(0, 10_000))
+def test_weighted_certifier_matches_certify_and_duplication(seed: int) -> None:
+    rng = np.random.default_rng(seed)
+    n_docs, n_lab = 300, 12
+    scores = rng.uniform(size=(n_docs, n_lab))
+    y = rng.uniform(size=(n_docs, n_lab)) < scores**3
+    thresholds = policy.candidate_thresholds(scores, min_applied=100, ratio=1.1)
+    wc = WeightedCertifier(scores, y, thresholds)
+
+    cert = policy.certify(scores, y, thresholds, alpha=0.1, delta=0.1)
+    auto = scores >= cert.tau if cert.tau is not None else np.zeros_like(y)
+    expected = metrics.automation(y, auto)["auto_recall"]
+    assert math.isclose(wc.auto_recall(np.ones(n_docs, np.int64), 0.1, 0.1), expected)
+
+    w = rng.integers(0, 3, n_docs)
+    rep = np.repeat(np.arange(n_docs), w)
+    cert_r = policy.certify(scores[rep], y[rep], thresholds, alpha=0.1, delta=0.1)
+    auto_r = scores[rep] >= cert_r.tau if cert_r.tau is not None else np.zeros_like(y[rep])
+    expected_r = metrics.automation(y[rep], auto_r)["auto_recall"]
+    assert math.isclose(wc.auto_recall(w, 0.1, 0.1), expected_r, rel_tol=1e-9, abs_tol=1e-12)

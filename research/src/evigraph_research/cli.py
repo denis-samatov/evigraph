@@ -54,5 +54,21 @@ def baseline(n_features: int = 2**21, alpha: float = 0.05, delta: float = 0.1) -
     mod.run(n_features=n_features, alpha=alpha, delta=delta)
 
 
+@app.command("strong-text")
+def strong_text(max_steps: int | None = None, epochs: int | None = None) -> None:
+    """Fine-tune the strong text control (LEGAL-BERT). --max-steps N only benchmarks speed."""
+    from evigraph_research import strong as mod
+
+    typer.echo(mod.run(max_steps=max_steps, epochs=epochs))
+
+
+@app.command()
+def compare() -> None:
+    """Protocol v1: pre-registered systems, certification and H1 contrasts."""
+    from evigraph_research import compare as mod
+
+    mod.run()
+
+
 def main() -> None:
     app()

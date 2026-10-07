@@ -24,3 +24,7 @@ SPLITS = INTERIM / "split_manifest.parquet"
 def ensure_dirs() -> None:
     for d in (RAW, INTERIM, CACHE, REPORTS):
         d.mkdir(parents=True, exist_ok=True)
+
+
+# predictions of the strong text control (strong.py), aligned to model_dev+calib_fit+risk_cert rows
+STRONG_PREDS = CACHE / "preds" / "p_strong.joblib"

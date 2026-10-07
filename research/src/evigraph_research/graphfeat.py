@@ -40,30 +40,28 @@ def _vote(adj: sp.csr_matrix, y_train: sp.csr_matrix) -> tuple[np.ndarray, np.nd
     return votes, deg
 
 
-def build(
-    celex_ids: list[str],
-    is_train: np.ndarray,
-    y: np.ndarray,
-    edges: pd.DataFrame,
-    *,
-    hub_cap: int = HUB_CAP,
-) -> GraphFeatures:
+def _symmetric(a: sp.coo_matrix | sp.csr_matrix) -> sp.csr_matrix:
+    a = ((a + a.transpose()) > 0).astype(np.float32).tocsr()
+    a.setdiag(0)
+    a.eliminate_zeros()
+    return a
+
+
+def adjacencies(
+    celex_ids: list[str], edges: pd.DataFrame, *, hub_cap: int = HUB_CAP
+) -> dict[str, sp.csr_matrix]:
+    """Undirected document adjacency per relation bucket, plus `hub` (shared external act)."""
     n = len(celex_ids)
     idx = {c: i for i, c in enumerate(celex_ids)}
-    y_train = sp.csr_matrix(np.where(is_train[:, None], y, False).astype(np.float32))
-
-    votes, degree = {}, {}
-    inner = edges[edges["dst_in_corpus"]].copy()
+    edges = edges[edges["src"].isin(idx)]
+    out = {}
+    inner = edges[edges["dst_in_corpus"] & edges["dst"].isin(idx)].copy()
     inner["bucket"] = inner["family"].map(_family_bucket)
     for bucket in (*FAMILIES, "other"):
         e = inner[inner["bucket"] == bucket]
         r = e["src"].map(idx).to_numpy()
         c = e["dst"].map(idx).to_numpy()
-        a = sp.coo_matrix((np.ones(len(e), np.float32), (r, c)), shape=(n, n)).tocsr()
-        a = ((a + a.T) > 0).astype(np.float32)
-        a.setdiag(0)
-        a.eliminate_zeros()
-        votes[bucket], degree[bucket] = _vote(a, y_train)
+        out[bucket] = _symmetric(sp.coo_matrix((np.ones(len(e), np.float32), (r, c)), (n, n)))
 
     ext = edges[~edges["dst_in_corpus"]][["src", "dst"]].drop_duplicates()
     hub_size = ext.groupby("dst")["src"].transform("size")
@@ -76,9 +74,48 @@ def build(
         ),
         shape=(n, len(hubs)),
     ).tocsr()
-    a_hub = ((b @ b.T) > 0).astype(np.float32)
-    a_hub.setdiag(0)
-    a_hub.eliminate_zeros()
-    votes["hub"], degree["hub"] = _vote(a_hub, y_train)
+    out["hub"] = _symmetric(b @ b.T)
+    return out
 
+
+def build(
+    celex_ids: list[str],
+    is_train: np.ndarray,
+    y: np.ndarray,
+    edges: pd.DataFrame,
+    *,
+    hub_cap: int = HUB_CAP,
+) -> GraphFeatures:
+    y_train = sp.csr_matrix(np.where(is_train[:, None], y, False).astype(np.float32))
+    votes, degree = {}, {}
+    for name, a in adjacencies(celex_ids, edges, hub_cap=hub_cap).items():
+        votes[name], degree[name] = _vote(a, y_train)
     return GraphFeatures(names=list(votes), votes=votes, degree=degree)
+
+
+def reference_neighbours(
+    celex_ids: list[str],
+    dates: np.ndarray,
+    is_train: np.ndarray,
+    edges: pd.DataFrame,
+    *,
+    hub_cap: int = HUB_CAP,
+) -> sp.csr_matrix:
+    """Row-normalised matrix of the neighbours a document may draw on.
+
+    Same neighbour set as the graph features: train documents linked directly (any relation)
+    or through a shared external act, published strictly before the document.
+    """
+    adj = adjacencies(celex_ids, edges, hub_cap=hub_cap)
+    total = sp.csr_matrix(next(iter(adj.values())).shape, dtype=np.float32)
+    for m in adj.values():
+        total = total + m
+    a = total.tocoo()
+    keep = is_train[a.col] & (dates[a.col] < dates[a.row])
+    a = sp.coo_matrix(
+        (np.ones(int(keep.sum()), np.float32), (a.row[keep], a.col[keep])), shape=a.shape
+    ).tocsr()
+    a.data[:] = 1.0  # duplicates from several relations count once
+    deg = np.asarray(a.sum(axis=1)).ravel()
+    inv = np.divide(1.0, deg, out=np.zeros_like(deg), where=deg > 0)
+    return (sp.diags(inv.astype(np.float32)) @ a).tocsr()
