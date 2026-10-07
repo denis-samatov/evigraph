@@ -1,0 +1,25 @@
+{
+  "model": "nlpaueb/legal-bert-base-uncased",
+  "revision": "15b570cbf88259610b082a167dacc190124f60f6",
+  "best_epoch": 4,
+  "history": [
+    {
+      "epoch": 1,
+      "es_mrp": 0.69
+    },
+    {
+      "epoch": 2,
+      "es_mrp": 0.7701
+    },
+    {
+      "epoch": 3,
+      "es_mrp": 0.7966
+    },
+    {
+      "epoch": 4,
+      "es_mrp": 0.8049
+    }
+  ],
+  "train_minutes": 370.8,
+  "device": "mps"
+}

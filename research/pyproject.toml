@@ -50,3 +50,4 @@ python-version = "3.11"
 
 [tool.ruff.lint.per-file-ignores]
 "src/evigraph_research/cli.py" = ["PLC0415"]  # lazy imports keep `--help` fast
+"src/evigraph_research/report_v1.py" = ["RUF001"]  # Russian report text and math symbols
