@@ -1,0 +1,67 @@
+{
+  "seed": 20261007,
+  "model_dev_size_target": 5000,
+  "model_dev_cutoff": "2007-10-29",
+  "manifest_sha256": "b36fef1d2a5cb410873173f74ee40d7da7359ecd62ebfbd4c4fc01423fef6b01",
+  "counts": {
+    "train": 49998,
+    "final_test": 5000,
+    "model_dev": 4900,
+    "risk_cert": 2659,
+    "calib_fit": 2341,
+    "excluded_overlap": 102
+  },
+  "date_ranges": {
+    "calib_fit": [
+      "2010-02-05",
+      "2012-08-27"
+    ],
+    "excluded_overlap": [
+      "2007-11-05",
+      "2010-01-18"
+    ],
+    "final_test": [
+      "2012-08-28",
+      "2016-01-05"
+    ],
+    "model_dev": [
+      "2007-10-29",
+      "2010-02-05"
+    ],
+    "risk_cert": [
+      "2010-02-05",
+      "2012-08-28"
+    ],
+    "train": [
+      "1958-04-15",
+      "2007-10-27"
+    ]
+  },
+  "copy_in_train_rate": {
+    "calib_fit": {
+      "exact": 0.0,
+      "near": 0.0,
+      "template": 0.0004
+    },
+    "excluded_overlap": {
+      "exact": 0.0,
+      "near": 0.9902,
+      "template": 0.9314
+    },
+    "final_test": {
+      "exact": 0.0,
+      "near": 0.0,
+      "template": 0.0006
+    },
+    "model_dev": {
+      "exact": 0.0,
+      "near": 0.0,
+      "template": 0.0545
+    },
+    "risk_cert": {
+      "exact": 0.0,
+      "near": 0.0,
+      "template": 0.0004
+    }
+  }
+}

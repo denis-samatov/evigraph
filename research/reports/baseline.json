@@ -1,0 +1,339 @@
+{
+  "n_docs": {
+    "train": 49998,
+    "model_dev": 4900,
+    "calib_fit": 2341,
+    "risk_cert": 2659,
+    "final_test": 5000
+  },
+  "text_model_dev": {
+    "mrp": 0.7821,
+    "micro_f1": 0.698,
+    "macro_f1": 0.3687,
+    "recall@5": 0.7066,
+    "recall@10": 0.8812,
+    "recall@20": 0.9474,
+    "recall@30": 0.9679
+  },
+  "text": {
+    "model_dev_oof": {
+      "mrp": 0.7907,
+      "micro_f1": 0.7534,
+      "macro_f1": 0.5005,
+      "auto_recall@emp_risk<=0.01": 0.0241,
+      "auto_recall@emp_risk<=0.02": 0.035,
+      "auto_recall@emp_risk<=0.05": 0.2845,
+      "auto_recall@emp_risk<=0.1": 0.5636
+    },
+    "risk_cert_ranking": {
+      "mrp": 0.7164,
+      "ece_all_pairs": 0.0018,
+      "ece_top10_pairs": 0.028
+    },
+    "policy": {
+      "0.01": {
+        "tau_raw": null,
+        "tau_calibrated": null,
+        "n_thresholds_tested": 1,
+        "last_tested": [
+          {
+            "tau": 0.9938,
+            "n": 625,
+            "errors": 20,
+            "ucb": 0.043
+          }
+        ],
+        "n_auto": 0,
+        "n_errors": 0,
+        "risk": null,
+        "auto_recall": 0.0,
+        "auto_per_doc": 0.0,
+        "docs_fully_auto_correct": 0.0
+      },
+      "0.02": {
+        "tau_raw": null,
+        "tau_calibrated": null,
+        "n_thresholds_tested": 1,
+        "last_tested": [
+          {
+            "tau": 0.9938,
+            "n": 625,
+            "errors": 20,
+            "ucb": 0.043
+          }
+        ],
+        "n_auto": 0,
+        "n_errors": 0,
+        "risk": null,
+        "auto_recall": 0.0,
+        "auto_per_doc": 0.0,
+        "docs_fully_auto_correct": 0.0
+      },
+      "0.05": {
+        "tau_raw": 0.9929144382476807,
+        "tau_calibrated": 0.9566,
+        "n_thresholds_tested": 3,
+        "last_tested": [
+          {
+            "tau": 0.9929,
+            "n": 675,
+            "errors": 24,
+            "ucb": 0.0465
+          },
+          {
+            "tau": 0.9919,
+            "n": 754,
+            "errors": 37,
+            "ucb": 0.0607
+          }
+        ],
+        "n_auto": 675,
+        "n_errors": 24,
+        "risk": 0.0356,
+        "auto_recall": 0.0494,
+        "auto_per_doc": 0.2539,
+        "docs_fully_auto_correct": 0.0011,
+        "risk_ci90_doc_bootstrap": [
+          0.0243,
+          0.0472
+        ],
+        "by_template_copy_in_train": {
+          "True": {
+            "n_auto": 0,
+            "n_errors": 0,
+            "risk": null,
+            "auto_recall": 0.0,
+            "auto_per_doc": 0.0,
+            "docs_fully_auto_correct": 0.0
+          },
+          "False": {
+            "n_auto": 675,
+            "n_errors": 24,
+            "risk": 0.0356,
+            "auto_recall": 0.0494,
+            "auto_per_doc": 0.254,
+            "docs_fully_auto_correct": 0.0011
+          }
+        }
+      },
+      "0.1": {
+        "tau_raw": 0.7791999578475952,
+        "tau_calibrated": 0.7744,
+        "n_thresholds_tested": 27,
+        "last_tested": [
+          {
+            "tau": 0.7792,
+            "n": 5883,
+            "errors": 556,
+            "ucb": 0.0996
+          },
+          {
+            "tau": 0.728,
+            "n": 6444,
+            "errors": 676,
+            "ucb": 0.11
+          }
+        ],
+        "n_auto": 5883,
+        "n_errors": 556,
+        "risk": 0.0945,
+        "auto_recall": 0.4044,
+        "auto_per_doc": 2.2125,
+        "docs_fully_auto_correct": 0.0312,
+        "risk_ci90_doc_bootstrap": [
+          0.0878,
+          0.1016
+        ],
+        "by_template_copy_in_train": {
+          "True": {
+            "n_auto": 5,
+            "n_errors": 2,
+            "risk": 0.4,
+            "auto_recall": 0.75,
+            "auto_per_doc": 5.0,
+            "docs_fully_auto_correct": 0.0
+          },
+          "False": {
+            "n_auto": 5878,
+            "n_errors": 554,
+            "risk": 0.0942,
+            "auto_recall": 0.4043,
+            "auto_per_doc": 2.2114,
+            "docs_fully_auto_correct": 0.0312
+          }
+        }
+      }
+    }
+  },
+  "text+graph": {
+    "model_dev_oof": {
+      "mrp": 0.7988,
+      "micro_f1": 0.7594,
+      "macro_f1": 0.5213,
+      "auto_recall@emp_risk<=0.01": 0.0317,
+      "auto_recall@emp_risk<=0.02": 0.0513,
+      "auto_recall@emp_risk<=0.05": 0.2975,
+      "auto_recall@emp_risk<=0.1": 0.5721
+    },
+    "risk_cert_ranking": {
+      "mrp": 0.7227,
+      "ece_all_pairs": 0.0015,
+      "ece_top10_pairs": 0.0224
+    },
+    "policy": {
+      "0.01": {
+        "tau_raw": null,
+        "tau_calibrated": null,
+        "n_thresholds_tested": 1,
+        "last_tested": [
+          {
+            "tau": 0.9941,
+            "n": 598,
+            "errors": 16,
+            "ucb": 0.0373
+          }
+        ],
+        "n_auto": 0,
+        "n_errors": 0,
+        "risk": null,
+        "auto_recall": 0.0,
+        "auto_per_doc": 0.0,
+        "docs_fully_auto_correct": 0.0
+      },
+      "0.02": {
+        "tau_raw": null,
+        "tau_calibrated": null,
+        "n_thresholds_tested": 1,
+        "last_tested": [
+          {
+            "tau": 0.9941,
+            "n": 598,
+            "errors": 16,
+            "ucb": 0.0373
+          }
+        ],
+        "n_auto": 0,
+        "n_errors": 0,
+        "risk": null,
+        "auto_recall": 0.0,
+        "auto_per_doc": 0.0,
+        "docs_fully_auto_correct": 0.0
+      },
+      "0.05": {
+        "tau_raw": 0.9922613501548767,
+        "tau_calibrated": 0.9515,
+        "n_thresholds_tested": 4,
+        "last_tested": [
+          {
+            "tau": 0.9923,
+            "n": 704,
+            "errors": 25,
+            "ucb": 0.0462
+          },
+          {
+            "tau": 0.9911,
+            "n": 778,
+            "errors": 33,
+            "ucb": 0.0532
+          }
+        ],
+        "n_auto": 704,
+        "n_errors": 25,
+        "risk": 0.0355,
+        "auto_recall": 0.0515,
+        "auto_per_doc": 0.2648,
+        "docs_fully_auto_correct": 0.0011,
+        "risk_ci90_doc_bootstrap": [
+          0.0246,
+          0.0463
+        ],
+        "by_template_copy_in_train": {
+          "True": {
+            "n_auto": 0,
+            "n_errors": 0,
+            "risk": null,
+            "auto_recall": 0.0,
+            "auto_per_doc": 0.0,
+            "docs_fully_auto_correct": 0.0
+          },
+          "False": {
+            "n_auto": 704,
+            "n_errors": 25,
+            "risk": 0.0355,
+            "auto_recall": 0.0516,
+            "auto_per_doc": 0.2649,
+            "docs_fully_auto_correct": 0.0011
+          }
+        }
+      },
+      "0.1": {
+        "tau_raw": 0.7890990376472473,
+        "tau_calibrated": 0.7638,
+        "n_thresholds_tested": 27,
+        "last_tested": [
+          {
+            "tau": 0.7891,
+            "n": 5882,
+            "errors": 526,
+            "ucb": 0.0944
+          },
+          {
+            "tau": 0.7387,
+            "n": 6429,
+            "errors": 657,
+            "ucb": 0.1072
+          }
+        ],
+        "n_auto": 5882,
+        "n_errors": 526,
+        "risk": 0.0894,
+        "auto_recall": 0.4066,
+        "auto_per_doc": 2.2121,
+        "docs_fully_auto_correct": 0.0357,
+        "risk_ci90_doc_bootstrap": [
+          0.083,
+          0.096
+        ],
+        "by_template_copy_in_train": {
+          "True": {
+            "n_auto": 5,
+            "n_errors": 2,
+            "risk": 0.4,
+            "auto_recall": 0.75,
+            "auto_per_doc": 5.0,
+            "docs_fully_auto_correct": 0.0
+          },
+          "False": {
+            "n_auto": 5877,
+            "n_errors": 524,
+            "risk": 0.0892,
+            "auto_recall": 0.4065,
+            "auto_per_doc": 2.2111,
+            "docs_fully_auto_correct": 0.0357
+          }
+        }
+      }
+    }
+  },
+  "primary": {
+    "alpha": 0.05,
+    "delta": 0.1,
+    "text": 0.0494,
+    "text+graph": 0.0515
+  },
+  "cost": {
+    "stages_s": {
+      "load": 0.7,
+      "tfidf": 0.3,
+      "text_model_fit_predict": 55.9,
+      "graph_features": 0.8,
+      "stack_text": 0.8,
+      "stack_text+graph": 1.2
+    },
+    "peak_rss_mb": 1959,
+    "text_fit_predict_ms_per_eval_doc": 5.65,
+    "hashing_features": 2097152,
+    "max_chars": 50000,
+    "text_model": "SGD log-loss alpha=5e-06 epochs=15"
+  }
+}

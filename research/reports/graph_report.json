@@ -1,0 +1,207 @@
+{
+  "edges_by_family": {
+    "cites": {
+      "edges": 110554,
+      "share_in_corpus": 0.6444
+    },
+    "based_on": {
+      "edges": 92453,
+      "share_in_corpus": 0.5862
+    },
+    "amends": {
+      "edges": 35768,
+      "share_in_corpus": 0.839
+    },
+    "repeals": {
+      "edges": 13585,
+      "share_in_corpus": 0.8359
+    },
+    "adopts": {
+      "edges": 13102,
+      "share_in_corpus": 0.0002
+    },
+    "other:resource_legal_derogates_resource_legal": {
+      "edges": 2485,
+      "share_in_corpus": 0.8865
+    },
+    "other:resource_legal_associates_agreement_international": {
+      "edges": 1687,
+      "share_in_corpus": 0.0
+    },
+    "other:resource_legal_extends_validity_of_resource_legal": {
+      "edges": 1160,
+      "share_in_corpus": 0.7543
+    },
+    "other:resource_legal_implements_resource_legal": {
+      "edges": 781,
+      "share_in_corpus": 0.7298
+    },
+    "other:work_related_to_work": {
+      "edges": 599,
+      "share_in_corpus": 0.7212
+    },
+    "other:resource_legal_partially_adopts_resource_legal": {
+      "edges": 355,
+      "share_in_corpus": 0.0
+    },
+    "other:resource_legal_reestablishes_resource_legal": {
+      "edges": 297,
+      "share_in_corpus": 0.0
+    },
+    "completes": {
+      "edges": 283,
+      "share_in_corpus": 0.3145
+    },
+    "other:resource_legal_replaces_resource_legal": {
+      "edges": 203,
+      "share_in_corpus": 0.7488
+    },
+    "other:resource_legal_partially_suspends_resource_legal": {
+      "edges": 168,
+      "share_in_corpus": 0.0595
+    },
+    "other:resource_legal_related_to_resource_legal": {
+      "edges": 164,
+      "share_in_corpus": 0.5732
+    },
+    "other:resource_legal_extends_application_resource_legal": {
+      "edges": 138,
+      "share_in_corpus": 0.2174
+    },
+    "suspends": {
+      "edges": 62,
+      "share_in_corpus": 0.871
+    },
+    "other:resource_legal_adds_to_resource_legal": {
+      "edges": 43,
+      "share_in_corpus": 0.9302
+    },
+    "other:resource_legal_does_deletion_of_resource_legal": {
+      "edges": 39,
+      "share_in_corpus": 0.9744
+    },
+    "corrects": {
+      "edges": 34,
+      "share_in_corpus": 0.9412
+    },
+    "other:resource_legal_does_replacement_of_resource_legal": {
+      "edges": 33,
+      "share_in_corpus": 0.9091
+    },
+    "other:resource_legal_does_insertion_of_resource_legal": {
+      "edges": 30,
+      "share_in_corpus": 0.9333
+    },
+    "other:resource_legal_interpretes_authoritatively_resource_legal": {
+      "edges": 22,
+      "share_in_corpus": 0.8636
+    },
+    "other:resource_legal_does_repeal_of_resource_legal": {
+      "edges": 11,
+      "share_in_corpus": 0.9091
+    },
+    "other:resource_legal_defers_application_of_resource_legal": {
+      "edges": 9,
+      "share_in_corpus": 1.0
+    },
+    "other:work_contains_work": {
+      "edges": 5,
+      "share_in_corpus": 0.4
+    },
+    "other:resource_legal_incorporates_resource_legal": {
+      "edges": 3,
+      "share_in_corpus": 1.0
+    },
+    "other:resource_legal_contains_eesc_opinion_on_resource_legal": {
+      "edges": 3,
+      "share_in_corpus": 0.0
+    },
+    "other:resource_legal_replaced_by_resource_legal": {
+      "edges": 1,
+      "share_in_corpus": 1.0
+    },
+    "other:resource_legal_confirms_resource_legal": {
+      "edges": 1,
+      "share_in_corpus": 1.0
+    }
+  },
+  "docs_with_any_outgoing_edge": 0.9996,
+  "coverage_train_neighbour": {
+    "train": {
+      "cites": 0.555,
+      "amends": 0.4226,
+      "repeals": 0.1694,
+      "based_on": 0.6636,
+      "other": 0.0858,
+      "hub": 0.466,
+      "any_direct": 0.8896,
+      "direct_or_hub": 0.9929
+    },
+    "model_dev": {
+      "cites": 0.4147,
+      "amends": 0.3043,
+      "repeals": 0.0865,
+      "based_on": 0.6916,
+      "other": 0.0322,
+      "hub": 0.3069,
+      "any_direct": 0.8818,
+      "direct_or_hub": 0.9539
+    },
+    "calib_fit": {
+      "cites": 0.3148,
+      "amends": 0.1585,
+      "repeals": 0.0359,
+      "based_on": 0.5703,
+      "other": 0.0175,
+      "hub": 0.1414,
+      "any_direct": 0.7608,
+      "direct_or_hub": 0.7954
+    },
+    "risk_cert": {
+      "cites": 0.3031,
+      "amends": 0.1388,
+      "repeals": 0.0301,
+      "based_on": 0.6089,
+      "other": 0.0162,
+      "hub": 0.135,
+      "any_direct": 0.7747,
+      "direct_or_hub": 0.8041
+    },
+    "final_test": {
+      "cites": 0.3488,
+      "amends": 0.1248,
+      "repeals": 0.0382,
+      "based_on": 0.3502,
+      "other": 0.0168,
+      "hub": 0.109,
+      "any_direct": 0.6236,
+      "direct_or_hub": 0.6512
+    }
+  },
+  "label_jaccard": {
+    "random_pairs": 0.0752,
+    "amends": 0.5394,
+    "based_on": 0.3438,
+    "cites": 0.3424,
+    "other": 0.4731,
+    "repeals": 0.512
+  },
+  "neighbour_vote_signal": {
+    "model_dev": {
+      "covered_docs": 4674,
+      "prior_mrp": 0.1712,
+      "vote_mrp": 0.534
+    },
+    "risk_cert": {
+      "covered_docs": 2138,
+      "prior_mrp": 0.1493,
+      "vote_mrp": 0.4951
+    }
+  },
+  "decision": {
+    "rule": "GO if coverage >= 0.5 and vote mRP - prior mRP >= 0.1",
+    "coverage": 0.9539,
+    "mrp_gain": 0.3628,
+    "go": true
+  }
+}

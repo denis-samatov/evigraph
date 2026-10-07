@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# research data is reproducible from `make all`; only reports and manifests summaries are tracked
+research/data/
+
+# run logs
+research/reports/.*.log
