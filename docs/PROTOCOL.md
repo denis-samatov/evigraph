@@ -200,6 +200,40 @@ H2a, H2b and H2c as in section 12. In addition:
 
 H2 is supported if H2a, H2b and H2c hold; H2d is judged separately.
 
+# Part 4. Protocol 3.0: the single evaluation on `final_test`
+
+Registered on 2026-10-08, before `final_test` was opened and before LEGAL-BERT seeds 1 and 2
+finished training. Parameters in
+[`protocol_v3.py`](../research/src/evigraph_research/protocol_v3.py).
+
+## 15. Frozen systems and seeds
+
+* Systems T0, T1, C1, C2, G1, G2 (section 6) and C1p, G1p (section 11), with stackers and
+  thresholds fitted and certified exactly as before: stackers on `model_dev`, thresholds on
+  `risk_cert` at α = 0.10 (secondary α = 0.05), δ = 0.1, the same grid.
+* LEGAL-BERT seeds {0, 1, 2}: identical hyper-parameters, only the seed changes. For each seed
+  the stackers and thresholds are refitted with that seed's predictions.
+* `final_test` is opened through `protocol.open_final_test` only: once per seed to predict with
+  LEGAL-BERT and once for the evaluation run. Each opening is logged. Nothing is changed
+  after opening; a fix needed after opening is reported as a deviation.
+
+## 16. Questions and decision rules
+
+* **F1, guarantee on a later period.** Realised risk on `final_test` at the certified
+  threshold for T1, C1, C1p, G1 and G1p. The guarantee **holds** if the point estimate is ≤ α,
+  is **violated** if the lower bound of the 95% document-bootstrap interval is > α, and is
+  **inconclusive** otherwise. `final_test` is the latest period of MultiEURLEX, so this tests
+  the guarantee under natural temporal drift, not under exchangeability.
+* **F2, replication of H1.** AutoRecall at the fixed certified threshold; contrasts G1 − C1,
+  G1 − C2, G2 − C1; paired document bootstrap. The graph adds information beyond text only if
+  the lower bound is positive for every contrast.
+* **F3, replication of H2.** The protocol 2.1 scenario (exact copies, m ∈ {0, 10, 30, 100},
+  adaptive window) with 500 `final_test` targets drawn with seed 8; rules H2a–H2d as in 2.1.
+
+Intervals: 1,000 document-bootstrap resamples, seed 9. Every rule is evaluated per seed and
+reported as "holds in k of 3 seeds"; a rule is confirmed only with 3 of 3. If a seed has not
+finished training, the verdict uses the available seeds and the report says so.
+
 ## History
 
 | Version | Date | Change |
@@ -210,3 +244,4 @@ H2 is supported if H2a, H2b and H2c hold; H2d is judged separately.
 | 2.0 | 2026-10-08 | before the first run: in G1p the hub size is counted in provenance groups (otherwise copies push a hub over the cap and change features around the grouping) |
 | 2.1 | 2026-10-08 | part 3: adaptive candidate window, fresh targets, rule H2d; registered after the 2.0 results and before the 2.1 run |
 | — | 2026-10-08 | document translated from Russian to English; no change in substance (the Russian original is in the git history) |
+| 3.0 | 2026-10-08 | part 4: single evaluation on `final_test` with three LEGAL-BERT seeds; registered before `final_test` was opened |

@@ -73,6 +73,11 @@ and *model_dev* (4,900); official dev is split by provenance group into *calib_f
 and *risk_cert* (2,659); official test (5,000) is *final_test* and remains sealed.
 Split groups join exact copies, near copies and corrigenda.
 
+**Sanity check against published numbers.** Fine-tuned LEGAL-BERT (T1) reaches mRP 0.735 on
+risk_cert and C1 0.754. Chalkidis et al. (2021, Table 8) report mRP 0.736 for XLM-R fine-tuned
+end-to-end on English level 2. Their number is on the official test split and ours on a
+subset of the official dev split, so this is a plausibility check, not a comparison of models.
+
 ## 3. Method and protocol
 
 **Systems.** Every system is the same stacker — logistic regression over (document, concept)
@@ -158,6 +163,34 @@ like naive kNN. Citation links stay robust because they do not depend on detecti
 naive kNN risk on targets rises to 15.7% while its AutoRecall falls from 56% to 24%;
 provenance kNN keeps the risk at 7.6% with AutoRecall 52%; the graph is unaffected.
 
+**Can a covariate-shift correction replace provenance?** (exploratory, not pre-registered;
+`research/reports/WEIGHTED_CONFORMAL.md`). We re-certify C1 under the 2.1 scenario with
+density-ratio weights in the style of Tibshirani et al. (2019). A gradient-boosting classifier
+separates certification-time from deployment-time documents using vote and score descriptors.
+Its odds weight the labelled certification set, clipped at 20, and the threshold is
+re-certified with Kish's effective sample size. No new labels are used.
+
+| Copies | Detector AUC | Clean τ | Weighted re-cert. | Oracle re-cert. (new labels) | Provenance kNN |
+|---|---|---|---|---|---|
+| 10 | 0.89 | 11.6% | 9.1% | 9.1% | 8.3% |
+| 30 | 0.91 | 16.3% | 12.3% | 10.3% | 8.3% |
+
+Weighting detects the shift and repairs moderate duplication, but not heavy duplication.
+Copies change P(y | x): a concentrated vote produced by copies looks like consensus yet is
+right less often. That violates the assumption under which reweighting is valid. Even
+labelled re-certification controls the average risk, not the risk of the affected subgroup.
+A first, weaker detector found no shift at all. Provenance-aware aggregation needs neither
+labels nor a detector. Caveats: one scenario and one seed; Kish's effective sample size is a
+heuristic, not a finite-sample weighted guarantee; the descriptors were designed knowing how
+copies act, which favours the weighted method.
+
+**Transfer to another language and catalog** (exploratory; service benchmark,
+`services/core/reports/RUSLAWOD_BENCHMARK.md`). The same certification path runs in the
+EviGraph Core service on RusLawOD (Saveliev & Kuchakov, 2024): 8,551 Russian federal acts
+with the official 21-section classifier, a TF-IDF engine, and the 1,000 newest acts held out
+as a later period. α = 10% certifies from about 500 reviewed acts and α = 5% from about 1,000.
+In every certified configuration the realised risk on the later acts stayed below α (2.2–7.2%).
+
 ## 6. Methodological note: bootstrapping a certified quantity
 
 Percentile bootstrap intervals for certified AutoRecall are skewed: point estimates sit near
@@ -165,23 +198,79 @@ the upper end (e.g. 55.4% with interval 48.9–56.3%). Under resampling, any spu
 on the threshold path stops the fixed sequence early, so resampled AutoRecall is biased down.
 Protocol 2.x therefore evaluates realised risk at a fixed certified threshold.
 
-## 7. Limitations
+## 7. Related work
+
+*Distribution-free risk control.* LTT (Angelopoulos et al., 2025) and conformal risk control
+(Angelopoulos et al., 2024) certify thresholds under exchangeability; selective
+classification (Geifman & El-Yaniv, 2017) is the accuracy–coverage view of the same policy.
+Weighted conformal prediction (Tibshirani et al., 2019) and non-exchangeable conformal
+prediction (Barber et al., 2023) relax exchangeability under covariate shift or bounded
+drift. Duplication of retrieval sources is a shift in P(y | x) for the retrieval features, so
+these corrections do not apply directly (§5).
+
+*Duplication.* MinHash resemblance (Broder, 1997) is the standard near-duplicate detector.
+Deduplication improves language models and reduces train–test overlap (Lee et al., 2022). We
+study duplication in the *retrieval pool* after certification, not in training data.
+
+*Retrieval corruption.* Injecting a few crafted texts into a retrieval corpus can steer
+retrieval-augmented generation (Zou et al., 2025). Our setting is benign: copies carry their
+source's own labels. Even so, duplication alone breaks certified guarantees.
+
+*Legal classification.* MultiEURLEX (Chalkidis et al., 2021), LexGLUE (Chalkidis et al., 2022)
+and LEGAL-BERT (Chalkidis et al., 2020) are the benchmark and model base. Calibration of
+neural scores (Guo et al., 2017) motivates certifying on raw scores rather than on
+recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation (Lebo et al.,
+2013). Evidence faithfulness for the product follows ERASER (DeYoung et al., 2020).
+
+## 8. Limitations
 
 One seed for LEGAL-BERT; Clopper–Pearson assumes independent pairs; LEGAL-BERT was
 pre-trained on EUR-Lex text (no labels); copies are injected, not observed; provenance
 detection is MinHash-based; final_test has not been opened.
 
-## 8. Reproducibility
+## 9. Reproducibility
 
 `make all` rebuilds data, splits and baselines; `evigraph-research strong-text`,
 `compare`, `h2 --version 2.0|2.1` and `python -m evigraph_research.figures` reproduce every
 number and figure. Protocol versions, results and code are separate commits in order.
 
-## References (to verify before submission)
+## References
 
-Angelopoulos, Bates, Candès, Jordan, Lei (2021) Learn then Test. · Angelopoulos et al. (2022)
-Conformal risk control. · Geifman & El-Yaniv (2017) Selective classification. · Chalkidis,
-Fergadiotis, Androutsopoulos (2021) MultiEURLEX. · Chalkidis et al. (2020) LEGAL-BERT. ·
-Chalkidis et al. (2022) LexGLUE. · Guo et al. (2017) On calibration. · Broder (1997) MinHash.
-· Lee et al. (2022) Deduplicating training data. · Tibshirani et al. (2019) Conformal under
-covariate shift. · Barber et al. (2023) Conformal beyond exchangeability. · W3C PROV-O.
+* Angelopoulos, A. N., Bates, S., Candès, E. J., Jordan, M. I., & Lei, L. (2025). Learn then
+  Test: Calibrating predictive algorithms to achieve risk control. *Annals of Applied
+  Statistics*, 19(2), 1641–1662. doi:10.1214/24-AOAS1998. arXiv:2110.01052.
+* Angelopoulos, A. N., Bates, S., Fisch, A., Lei, L., & Schuster, T. (2024). Conformal risk
+  control. *ICLR 2024*. arXiv:2208.02814.
+* Barber, R. F., Candès, E. J., Ramdas, A., & Tibshirani, R. J. (2023). Conformal prediction
+  beyond exchangeability. *Annals of Statistics*, 51(2), 816–845. doi:10.1214/23-AOS2276.
+* Broder, A. Z. (1997). On the resemblance and containment of documents. *Compression and
+  Complexity of Sequences (SEQUENCES '97)*, 21–29.
+* Chalkidis, I., Fergadiotis, M., Malakasiotis, P., Aletras, N., & Androutsopoulos, I. (2020).
+  LEGAL-BERT: The Muppets straight out of Law School. *Findings of EMNLP 2020*, 2898–2904.
+* Chalkidis, I., Fergadiotis, M., & Androutsopoulos, I. (2021). MultiEURLEX — A multi-lingual
+  and multi-label legal document classification dataset for zero-shot cross-lingual transfer.
+  *EMNLP 2021*, 6974–6996. arXiv:2109.00904.
+* Chalkidis, I., Jana, A., Hartung, D., Bommarito, M., Androutsopoulos, I., Katz, D. M., &
+  Aletras, N. (2022). LexGLUE: A benchmark dataset for legal language understanding in
+  English. *ACL 2022*, 4310–4330.
+* Clopper, C. J., & Pearson, E. S. (1934). The use of confidence or fiducial limits illustrated
+  in the case of the binomial. *Biometrika*, 26(4), 404–413.
+* DeYoung, J., Jain, S., Rajani, N. F., Lehman, E., Xiong, C., Socher, R., & Wallace, B. C.
+  (2020). ERASER: A benchmark to evaluate rationalized NLP models. *ACL 2020*, 4443–4458.
+* Geifman, Y., & El-Yaniv, R. (2017). Selective classification for deep neural networks.
+  *NeurIPS 2017*, 4878–4887.
+* Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of modern neural
+  networks. *ICML 2017*, PMLR 70, 1321–1330.
+* Lebo, T., Sahoo, S., & McGuinness, D. (Eds.) (2013). PROV-O: The PROV Ontology. W3C
+  Recommendation, 30 April 2013.
+* Lee, K., Ippolito, D., Nystrom, A., Zhang, C., Eck, D., Callison-Burch, C., & Carlini, N.
+  (2022). Deduplicating training data makes language models better. *ACL 2022*, 8424–8445.
+* Saveliev, D., & Kuchakov, R. (2024). The Russian Legislative Corpus. arXiv:2406.04855.
+* Tibshirani, R. J., Barber, R. F., Candès, E. J., & Ramdas, A. (2019). Conformal prediction
+  under covariate shift. *NeurIPS 2019*, 2530–2540.
+* Zou, W., Geng, R., Wang, B., & Jia, J. (2025). PoisonedRAG: Knowledge corruption attacks to
+  retrieval-augmented generation of large language models. *USENIX Security 2025*.
+
+Bibliographic details were checked against the publishers' pages (ACL Anthology, PMLR,
+NeurIPS proceedings, project Euclid, W3C, arXiv) on 2026-10-08. The page ranges for Broder
+(1997) and Geifman & El-Yaniv (2017) come from secondary indexes.

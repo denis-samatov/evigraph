@@ -14,7 +14,7 @@ Duplication"** — draft in [`docs/paper/draft.md`](docs/paper/draft.md).
 
 Corpus: MultiEURLEX (English, 127 EuroVoc concepts) plus 274k act-to-act relations from
 EUR-Lex. Every experiment was registered in [`docs/PROTOCOL.md`](docs/PROTOCOL.md) before it
-was run; the final test split has not been opened yet.
+was run; the final test split is opened once, in protocol 3.0, after the extra seeds finish.
 
 1. **The citation graph does not improve accuracy beyond retrieval.** LEGAL-BERT + retrieval
    of similar documents automates 56.3% of tags at α = 10%, LEGAL-BERT + graph 55.4%
