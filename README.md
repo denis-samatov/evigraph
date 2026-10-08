@@ -29,13 +29,27 @@ was run; the final test split has not been opened yet.
 
 ![Realised risk under source duplication](research/reports/figures/risk_vs_copies.png)
 
+## Product: EviGraph Core
+
+[`services/core`](services/core/README.md) turns these results into a service: ingestion with
+provenance, suggestions with supporting evidence, expert review with optimistic concurrency,
+certified auto-apply per catalog and audit-based monitoring that suspends auto-apply when the
+guarantee no longer holds. On MultiEURLEX with 2,000 reviewed documents, it certifies a
+threshold at α = 10% and auto-applies tags to later documents with a realised error rate of 6.3%.
+
+```bash
+docker compose up --build        # API on http://localhost:8000/docs
+```
+
 ## Layout
 
 | Path | Contents |
 |---|---|
 | [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | evaluation protocol: versions 1.0, 2.0, 2.1 and their history |
 | [`docs/paper/draft.md`](docs/paper/draft.md) | paper draft |
-| [`research/`](research/README.md) | code, tests, reports |
+| [`research/`](research/README.md) | research code, tests, reports |
+| [`services/core/`](services/core/README.md) | EviGraph Core service (FastAPI, PostgreSQL) |
+| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | product milestones and status |
 | `research/reports/` | JSON results and a report per protocol version |
 | `research/reports/figures/` | paper figures |
 

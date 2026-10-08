@@ -1,0 +1,30 @@
+# EviGraph Core with PostgreSQL. `docker compose up --build`, then http://localhost:8000/docs
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: evigraph
+      POSTGRES_PASSWORD: evigraph
+      POSTGRES_DB: evigraph
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evigraph"]
+      interval: 2s
+      retries: 30
+
+  api:
+    build: services/core
+    environment:
+      EVIGRAPH_DATABASE_URL: postgresql+psycopg://evigraph:evigraph@db:5432/evigraph
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - artifacts:/data/artifacts
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  artifacts:
