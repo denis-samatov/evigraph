@@ -79,5 +79,21 @@ def h2(version: str = "2.1") -> None:
     mod.run({"2.0": protocol_v2, "2.1": protocol_v21}[version])
 
 
+@app.command("predict-final")
+def predict_final(seed: int = 0) -> None:
+    """Protocol 3.0: LEGAL-BERT predictions on final_test (opens the sealed split, logged)."""
+    from evigraph_research import strong as mod
+
+    typer.echo(mod.predict_final(seed))
+
+
+@app.command()
+def final(*, dry_run: bool = False) -> None:
+    """Protocol 3.0: the single final_test evaluation (--dry-run uses risk_cert instead)."""
+    from evigraph_research import final as mod
+
+    mod.run(dry_run=dry_run, seeds=(0,) if dry_run else mod.cfg.SEEDS)
+
+
 def main() -> None:
     app()
