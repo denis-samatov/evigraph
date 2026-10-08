@@ -211,7 +211,7 @@ class ReviewEvent(Timestamped, Base):
     reviewer: Mapped[str] = mapped_column(String(200))
     comment: Mapped[str | None] = mapped_column(Text)
     idempotency_key: Mapped[str] = mapped_column(String(200), unique=True)
-    from_state: Mapped[AssertionState] = mapped_column(_enum(AssertionState))
+    from_state: Mapped[AssertionState | None] = mapped_column(_enum(AssertionState))  # None: add
     to_state: Mapped[AssertionState] = mapped_column(_enum(AssertionState))
     resulting_revision: Mapped[int] = mapped_column(Integer)
 

@@ -54,4 +54,5 @@ ignore = ["PLR0913", "PLR2004", "S101", "S608"]
 python-version = "3.11"
 
 [tool.pytest.ini_options]
-filterwarnings = ["ignore::DeprecationWarning:fastapi.testclient"]
+pythonpath = ["tests"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]

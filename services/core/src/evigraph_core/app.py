@@ -4,8 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from evigraph_core import catalogs
+from evigraph_core import catalogs, reviews
 from evigraph_core.api.routes_base import router as base_router
+from evigraph_core.api.routes_review import router as review_router
 from evigraph_core.db import get_engine, session_factory
 from evigraph_core.settings import Settings, get_settings
 
@@ -24,9 +25,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def _catalog_state(_: Request, exc: catalogs.CatalogStateError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
+    @app.exception_handler(reviews.ReviewConflictError)
+    def _review_conflict(_: Request, exc: reviews.ReviewConflictError) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(reviews.ReviewNotFoundError)
+    def _review_missing(_: Request, exc: reviews.ReviewNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
     @app.exception_handler(IntegrityError)
     def _integrity(_: Request, exc: IntegrityError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": "conflict with existing data"})
 
     app.include_router(base_router)
+    app.include_router(review_router)
     return app
