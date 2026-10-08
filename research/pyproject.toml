@@ -5,6 +5,7 @@ description = "EviGraph research spike: MultiEURLEX, EUR-Lex graph, splits, base
 authors = [
     { name = "denis-samatov", email = "denissamatov470@gmail.com" }
 ]
+license = "Apache-2.0"
 requires-python = ">=3.11"
 dependencies = [
     "datasketch>=2.0.0",

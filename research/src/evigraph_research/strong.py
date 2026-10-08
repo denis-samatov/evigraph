@@ -13,6 +13,7 @@ which includes the texts of all splits.
 import gc
 import math
 import time
+from pathlib import Path
 from typing import Any
 
 import joblib
@@ -92,14 +93,31 @@ def predict(model, ids: list[np.ndarray], device: torch.device, batch: int = 32)
     return out
 
 
-def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
+def _paths(seed: int) -> dict[str, Path]:
+    """Seed 0 keeps the file names of protocol 1.0; other seeds get their own."""
+    rev = protocol.STRONG_TEXT_REVISION[:8]
+    tag = "" if seed == 0 else f"_seed{seed}"
+    return {
+        "preds": PREDS if seed == 0 else PREDS.with_name(f"p_strong_seed{seed}.joblib"),
+        "checkpoint": OUT_DIR / f"checkpoint_{rev}{tag}.pt",
+        "best": OUT_DIR / f"best_{rev}_seed{seed}.pt",
+        "summary": paths.REPORTS / f"strong_text{tag}.json",
+        "log": paths.REPORTS / f".strong{tag}.log",
+        "final": PREDS.with_name(f"p_strong_final_seed{seed}.joblib"),
+    }
+
+
+def run(
+    *, max_steps: int | None = None, epochs: int | None = None, seed: int = protocol.STRONG_SEED
+) -> dict:
     """Fine-tune and write predictions. `max_steps` limits a smoke/benchmark run (no outputs)."""
-    torch.manual_seed(protocol.STRONG_SEED)
+    files = _paths(seed)
+    torch.manual_seed(seed)
     epochs = epochs or protocol.STRONG_EPOCHS
     device = _device()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     PREDS.parent.mkdir(parents=True, exist_ok=True)
-    log = (paths.REPORTS / ".strong.log").open("a", buffering=1)
+    log = files["log"].open("a", buffering=1)
 
     def say(msg: str) -> None:
         line = f"{time.strftime('%H:%M:%S')} {msg}"
@@ -145,7 +163,7 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
     sched = get_linear_schedule_with_warmup(opt, int(protocol.STRONG_WARMUP * total), total)
     loss_fn = torch.nn.BCEWithLogitsLoss()
 
-    ckpt = OUT_DIR / f"checkpoint_{rev[:8]}.pt"
+    ckpt = files["checkpoint"]
     state: dict[str, Any] = {"epoch": 0, "history": [], "best_mrp": -1.0, "best_epoch": None}
     if ckpt.exists() and max_steps is None:
         saved = torch.load(ckpt, map_location="cpu", weights_only=False)
@@ -156,7 +174,7 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
         say(f"resumed after epoch {state['epoch']}")
 
     say(
-        f"device={device} fit={len(fit_rows)} es={len(es_rows)} eval={len(eval_rows)} "
+        f"seed={seed} device={device} fit={len(fit_rows)} es={len(es_rows)} eval={len(eval_rows)} "
         f"steps/epoch={steps_per_epoch} epochs={epochs}"
     )
     y_t = torch.from_numpy(y.astype(np.float32))
@@ -164,7 +182,7 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
     done_steps = state["epoch"] * steps_per_epoch
     for epoch in range(state["epoch"], epochs):
         model.train()
-        perm = np.random.default_rng(protocol.STRONG_SEED + epoch).permutation(fit_rows)
+        perm = np.random.default_rng(seed + epoch).permutation(fit_rows)
         ep_start = time.perf_counter()
         for step in range(steps_per_epoch):
             sel = perm[step * protocol.STRONG_BATCH : (step + 1) * protocol.STRONG_BATCH]
@@ -205,9 +223,10 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
                     "p": p_eval,
                     "epoch": epoch + 1,
                 },
-                PREDS,
+                files["preds"],
             )
-            say(f"saved predictions of epoch {epoch + 1}")
+            torch.save(model.state_dict(), files["best"])
+            say(f"saved predictions and weights of epoch {epoch + 1}")
         state["epoch"] = epoch + 1
         torch.save(
             {
@@ -220,6 +239,7 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
         )
 
     summary = {
+        "seed": seed,
         "model": tok_name,
         "revision": rev,
         "best_epoch": state["best_epoch"],
@@ -227,8 +247,32 @@ def run(*, max_steps: int | None = None, epochs: int | None = None) -> dict:
         "train_minutes": round((time.perf_counter() - started) / 60, 1),
         "device": str(device),
     }
-    (paths.REPORTS / "strong_text.json").write_bytes(
-        orjson.dumps(summary, option=orjson.OPT_INDENT_2)
-    )
+    files["summary"].write_bytes(orjson.dumps(summary, option=orjson.OPT_INDENT_2))
     say(f"done: {summary}")
     return summary
+
+
+def predict_final(seed: int) -> Path:
+    """Predictions of a trained seed on final_test. Opens the sealed split (logged)."""
+    protocol.open_final_test(f"strong text predictions, seed {seed}")
+    files = _paths(seed)
+    device = _device()
+    tok_name, rev = protocol.STRONG_TEXT_MODEL, protocol.STRONG_TEXT_REVISION
+    ds = dataset.load(with_text=True)
+    protocol.assert_manifest(ds.frame)
+    rows = np.flatnonzero(ds.mask("final_test"))
+    tokenizer = AutoTokenizer.from_pretrained(tok_name, revision=rev)
+    ids = tokenize(ds.frame["text"].iloc[rows].tolist(), tokenizer, protocol.STRONG_MAX_TOKENS)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        tok_name, revision=rev, num_labels=ds.y.shape[1], problem_type="multi_label_classification"
+    )
+    if files["best"].exists():
+        model.load_state_dict(torch.load(files["best"], map_location="cpu"))
+    else:  # seed 0 of protocol 1.0: the last checkpoint holds the best (final) epoch
+        model.load_state_dict(
+            torch.load(files["checkpoint"], map_location="cpu", weights_only=False)["model"]
+        )
+    model.to(device)
+    p = predict(model, ids, device)
+    joblib.dump({"celex_id": ds.frame["celex_id"].iloc[rows].tolist(), "p": p}, files["final"])
+    return files["final"]

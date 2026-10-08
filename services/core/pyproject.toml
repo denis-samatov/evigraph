@@ -5,6 +5,7 @@ description = "EviGraph Core: document tagging with provenance, expert review an
 authors = [
     { name = "denis-samatov", email = "denissamatov470@gmail.com" }
 ]
+license = "Apache-2.0"
 requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.20.0",

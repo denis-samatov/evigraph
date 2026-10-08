@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  research:
+    name: research (lint, types, unit tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      # torch and transformers are only needed to fine-tune LEGAL-BERT, not for the tests
+      - run: uv sync --all-groups --no-install-package torch --no-install-package transformers
+      - run: uv run --no-sync ruff format --check src tests
+      - run: uv run --no-sync ruff check src tests
+      - run: uv run --no-sync ty check src
+      - run: uv run --no-sync pytest -q
+
+  core:
+    name: core (lint, types, tests on PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: services/core
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: evigraph
+          POSTGRES_PASSWORD: evigraph
+          POSTGRES_DB: evigraph
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evigraph"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      EVIGRAPH_TEST_ADMIN_URL: postgresql+psycopg://evigraph:evigraph@localhost:5432/evigraph
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - run: uv sync --all-groups
+      - run: uv run --no-sync ruff format --check src tests migrations
+      - run: uv run --no-sync ruff check src tests migrations
+      - run: uv run --no-sync ty check src
+      - run: uv run --no-sync pytest -q
+
+  studio:
+    name: studio (TypeScript build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/studio
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # install runs the workspace "prepare" script: tsc, server bundle and Theia build
+      - run: npx --yes yarn@1.22.22 install --frozen-lockfile --network-timeout 600000

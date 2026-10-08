@@ -1,0 +1,22 @@
+EviGraph
+Copyright 2026 Denis Samatov
+
+Licensed under the Apache License, Version 2.0 (see LICENSE), except where noted below.
+
+Third-party code
+----------------
+apps/studio is derived from the Eclipse GLSP project template "node-json-theia"
+(https://github.com/eclipse-glsp/glsp-examples, commit 87151da9ebd0d5b1bc8b00eea532b4461a883be4),
+licensed under EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR MIT. Files derived from the
+template keep that license; see apps/studio/evigraph-glsp-server/LICENSE.
+
+Data (not distributed in this repository; downloaded by the scripts)
+---------------------------------------------------------------------
+* MultiEURLEX (Chalkidis, Fergadiotis & Androutsopoulos, 2021), CC BY-SA 4.0; EUR-Lex content
+  and Cellar metadata, (c) European Union, CC BY 4.0.
+* RusLawOD (Saveliev & Kuchakov, 2024), CC BY-NC 4.0 - research use only; do not use it to
+  train models for commercial products.
+* Pretrained model nlpaueb/legal-bert-base-uncased (Chalkidis et al., 2020), CC BY-SA 4.0.
+
+Reports derived from these datasets (aggregate metrics, figures) are shared under the
+licenses of the respective data.

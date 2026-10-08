@@ -55,11 +55,11 @@ def baseline(n_features: int = 2**21, alpha: float = 0.05, delta: float = 0.1) -
 
 
 @app.command("strong-text")
-def strong_text(max_steps: int | None = None, epochs: int | None = None) -> None:
+def strong_text(max_steps: int | None = None, epochs: int | None = None, seed: int = 0) -> None:
     """Fine-tune the strong text control (LEGAL-BERT). --max-steps N only benchmarks speed."""
     from evigraph_research import strong as mod
 
-    typer.echo(mod.run(max_steps=max_steps, epochs=epochs))
+    typer.echo(mod.run(max_steps=max_steps, epochs=epochs, seed=seed))
 
 
 @app.command()

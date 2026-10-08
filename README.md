@@ -1,5 +1,7 @@
 # EviGraph
 
+[![CI](https://github.com/denis-samatov/evigraph/actions/workflows/ci.yml/badge.svg)](https://github.com/denis-samatov/evigraph/actions/workflows/ci.yml)
+
 A research project on **certified document tagging** with concepts from a controlled
 vocabulary: the system applies a tag automatically only if the error rate among automatic
 tags is guaranteed (with probability 1 − δ) not to exceed α, and sends everything else to an
@@ -67,3 +69,9 @@ MPS), `uv run evigraph-research compare` (protocol 1.0), `uv run evigraph-resear
 The original product idea — an IDE for reviewing a knowledge graph built from documents
 (Theia + GLSP, a Python core) — is described in the initial architecture document; the research
 part establishes what such a system can base its quality guarantees on.
+
+## License
+
+Code: Apache License 2.0 ([`LICENSE`](LICENSE)); `apps/studio` is derived from an Eclipse GLSP
+template and keeps its EPL-2.0 / GPL-2.0 / MIT terms. Data are not included and keep their own
+licenses — notably RusLawOD is CC BY-NC 4.0 (research use only). See [`NOTICE`](NOTICE).
