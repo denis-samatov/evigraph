@@ -48,9 +48,17 @@ def _symmetric(a: sp.coo_matrix | sp.csr_matrix) -> sp.csr_matrix:
 
 
 def adjacencies(
-    celex_ids: list[str], edges: pd.DataFrame, *, hub_cap: int = HUB_CAP
+    celex_ids: list[str],
+    edges: pd.DataFrame,
+    *,
+    hub_cap: int = HUB_CAP,
+    hub_groups: np.ndarray | None = None,
 ) -> dict[str, sp.csr_matrix]:
-    """Undirected document adjacency per relation bucket, plus `hub` (shared external act)."""
+    """Undirected document adjacency per relation bucket, plus `hub` (shared external act).
+
+    The hub size compared with `hub_cap` counts documents, or provenance groups when
+    `hub_groups` (one label per celex id) is given, so copies cannot push a hub over the cap.
+    """
     n = len(celex_ids)
     idx = {c: i for i, c in enumerate(celex_ids)}
     edges = edges[edges["src"].isin(idx)]
@@ -64,7 +72,11 @@ def adjacencies(
         out[bucket] = _symmetric(sp.coo_matrix((np.ones(len(e), np.float32), (r, c)), (n, n)))
 
     ext = edges[~edges["dst_in_corpus"]][["src", "dst"]].drop_duplicates()
-    hub_size = ext.groupby("dst")["src"].transform("size")
+    if hub_groups is None:
+        hub_size = ext.groupby("dst")["src"].transform("size")
+    else:
+        ext = ext.assign(group=np.asarray(hub_groups, dtype=object)[ext["src"].map(idx)])
+        hub_size = ext.groupby("dst")["group"].transform("nunique")
     ext = ext[(hub_size >= 2) & (hub_size <= hub_cap)]
     hubs = {h: j for j, h in enumerate(ext["dst"].unique())}
     b = sp.coo_matrix(

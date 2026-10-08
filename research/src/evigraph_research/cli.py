@@ -70,5 +70,13 @@ def compare() -> None:
     mod.run()
 
 
+@app.command()
+def h2() -> None:
+    """Protocol 2.0: certified tagging under source duplication."""
+    from evigraph_research import h2 as mod
+
+    mod.run()
+
+
 def main() -> None:
     app()

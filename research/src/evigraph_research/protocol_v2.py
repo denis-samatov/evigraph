@@ -31,7 +31,13 @@ PROVENANCE_THRESHOLD = 0.8
 # with the top KNN_K groups.
 KNN_CANDIDATES = 200
 
-SYSTEMS = ("T1_strong", "C1_strong+knn", "C1p_strong+knn_prov", "G1_strong+graph", "G1p_strong+graph_prov")
+SYSTEMS = (
+    "T1_strong",
+    "C1_strong+knn",
+    "C1p_strong+knn_prov",
+    "G1_strong+graph",
+    "G1p_strong+graph_prov",
+)
 
 ALPHA = 0.10  # certified on clean risk_cert with protocol 1.0 settings
 ALPHA_SECONDARY = 0.05
