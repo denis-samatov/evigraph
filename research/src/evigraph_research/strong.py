@@ -28,6 +28,7 @@ from transformers import (
 
 from evigraph_research import dataset, metrics, paths, protocol
 
+CHECKPOINT_EVERY = 500  # steps; a long run can resume mid-epoch after an interruption
 PRE_TRUNCATE_CHARS = 8_000  # enough for 512 word pieces; saves tokenizer time
 OUT_DIR = paths.CACHE / "strong"
 PREDS = paths.STRONG_PREDS
@@ -164,14 +165,21 @@ def run(
     loss_fn = torch.nn.BCEWithLogitsLoss()
 
     ckpt = files["checkpoint"]
-    state: dict[str, Any] = {"epoch": 0, "history": [], "best_mrp": -1.0, "best_epoch": None}
+    state: dict[str, Any] = {
+        "epoch": 0,
+        "step": 0,  # steps already done in the current epoch
+        "history": [],
+        "best_mrp": -1.0,
+        "best_epoch": None,
+    }
     if ckpt.exists() and max_steps is None:
         saved = torch.load(ckpt, map_location="cpu", weights_only=False)
         model.load_state_dict(saved["model"])
         opt.load_state_dict(saved["opt"])
         sched.load_state_dict(saved["sched"])
         state = saved["state"]
-        say(f"resumed after epoch {state['epoch']}")
+        state.setdefault("step", 0)
+        say(f"resumed at epoch {state['epoch'] + 1}, step {state['step']}")
 
     say(
         f"seed={seed} device={device} fit={len(fit_rows)} es={len(es_rows)} eval={len(eval_rows)} "
@@ -179,12 +187,27 @@ def run(
     )
     y_t = torch.from_numpy(y.astype(np.float32))
     started = time.perf_counter()
-    done_steps = state["epoch"] * steps_per_epoch
+    done_steps = state["epoch"] * steps_per_epoch + state["step"]
+
+    def checkpoint() -> None:
+        torch.save(
+            {
+                "model": model.state_dict(),
+                "opt": opt.state_dict(),
+                "sched": sched.state_dict(),
+                "state": state,
+            },
+            ckpt,
+        )
+
     for epoch in range(state["epoch"], epochs):
         model.train()
         perm = np.random.default_rng(seed + epoch).permutation(fit_rows)
         ep_start = time.perf_counter()
-        for step in range(steps_per_epoch):
+        start_step = state["step"]
+        for step in range(
+            start_step, steps_per_epoch
+        ):  # the permutation is seeded: skip done steps
             sel = perm[step * protocol.STRONG_BATCH : (step + 1) * protocol.STRONG_BATCH]
             # gradient accumulation over micro-batches; same effective batch and mean loss
             for lo in range(0, len(sel), protocol.STRONG_MICRO_BATCH):
@@ -198,8 +221,11 @@ def run(
             sched.step()
             opt.zero_grad(set_to_none=True)
             done_steps += 1
+            if max_steps is None and (step + 1) % CHECKPOINT_EVERY == 0:
+                state["step"] = step + 1
+                checkpoint()
             if step % 50 == 0 or step == steps_per_epoch - 1:
-                rate = (step + 1) / (time.perf_counter() - ep_start)
+                rate = (step + 1 - start_step) / (time.perf_counter() - ep_start)
                 eta = (total - done_steps) / rate
                 say(
                     f"epoch {epoch + 1}/{epochs} step {step + 1}/{steps_per_epoch} "
@@ -228,15 +254,8 @@ def run(
             torch.save(model.state_dict(), files["best"])
             say(f"saved predictions and weights of epoch {epoch + 1}")
         state["epoch"] = epoch + 1
-        torch.save(
-            {
-                "model": model.state_dict(),
-                "opt": opt.state_dict(),
-                "sched": sched.state_dict(),
-                "state": state,
-            },
-            ckpt,
-        )
+        state["step"] = 0
+        checkpoint()
 
     summary = {
         "seed": seed,

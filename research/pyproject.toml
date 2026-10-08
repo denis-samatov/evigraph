@@ -54,3 +54,10 @@ python-version = "3.11"
 "src/evigraph_research/cli.py" = ["PLC0415"]  # lazy imports keep `--help` fast
 "src/evigraph_research/report_v1.py" = ["RUF001"]  # Greek letters and typographic dashes in tables
 "src/evigraph_research/figures.py" = ["RUF001"]  # Greek letters in axis labels
+
+# torch and transformers are not installed in CI (only needed to fine-tune LEGAL-BERT)
+[[tool.ty.overrides]]
+include = ["src/evigraph_research/strong.py"]
+
+[tool.ty.overrides.rules]
+unresolved-import = "ignore"
