@@ -1,4 +1,6 @@
-"""Risk certification of a threshold policy ("auto-apply if calibrated score >= tau").
+"""Risk certification of a threshold policy ("auto-apply if score >= tau").
+
+The score is the raw stacker output; calibrated scores are used only for display and ECE.
 
 Learn-then-Test with fixed-sequence testing (Angelopoulos et al., 2021): the candidate
 thresholds and their order are fixed *before* looking at the certification data (here: from

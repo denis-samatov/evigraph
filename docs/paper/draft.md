@@ -16,10 +16,13 @@ pre-registered experiments, we find that (i) a citation graph adds no accuracy o
 text model once a retrieval control with the same label information is included; (ii) the
 best system — LEGAL-BERT with k-nearest-neighbour label propagation — loses its certified
 guarantee when sources are duplicated after certification: realised risk on affected
-documents grows from 8.3% to 16.3% at a certified 10%; (iii) aggregating evidence by
-provenance group restores invariance to detectable copies at no cost on clean data; and
-(iv) identifier-based citation links are robust to duplication by construction. The value of
-the citation graph in this setting is robustness of guarantees, not accuracy.
+documents grows from 8.3% to 16.3% at a certified 10%, and over all certification documents
+from 8.7% to 13.8%; (iii) aggregating evidence by provenance group removes the effect of copies
+that the detector recognises — by construction for exact copies — at no cost on clean data,
+but not of edited copies that MinHash misses; and (iv) identifier-based citation links are
+unaffected because copies receive no incoming links. We read this as a measured failure mode
+of retrieval-based certified tagging and a mapping of where a simple fix works, not as a new
+robustness guarantee.
 
 ## 1. Introduction
 
@@ -48,9 +51,10 @@ neighbourhood — and nothing in the deployed system signals it.
 2. A negative result on accuracy: EUR-Lex relations carry strong label signal (neighbour
    vote mRP 0.53 vs 0.17 for the prior), but add nothing over a retrieval control with the
    same label information (§4).
-3. A positive result on robustness: kNN label propagation breaks certified guarantees under
-   post-certification duplication, provenance-aware aggregation provably and empirically
-   neutralises detectable copies, and citation links are robust by construction (§5).
+3. A measured failure mode: kNN label propagation breaks certified guarantees under
+   post-certification duplication. Provenance-aware aggregation neutralises copies that the
+   detector attributes to their source (trivially so for exact copies), and the limit of the
+   fix is the copy detector (§5).
 4. A methodological note: percentile bootstrap intervals of a *certified* AutoRecall are
    biased downwards because of the fixed-sequence stopping rule (§6).
 
@@ -91,6 +95,7 @@ different feature blocks:
 | C1 | T1 + kNN vote: similarity-weighted labels of the 20 nearest train documents |
 | C2 | T1 + text model over the document and the text of its graph neighbours (no labels) |
 | G1 | T1 + graph votes: mean labels of train neighbours per relation type |
+| G2 | T1 + kNN vote + neighbour text + graph votes |
 
 **Certification.** Thresholds on the raw stacker score form a geometric grid fixed on
 calib_fit; LTT with fixed-sequence testing and a one-sided Clopper–Pearson bound certifies
@@ -118,12 +123,18 @@ Certified AutoRecall on risk_cert (δ = 0.1):
 | C1 + kNN | **8.8%** | **34.3%** | **56.3%** |
 | C2 + neighbour text | 0 | 26.4% | 50.4% |
 | G1 + graph | 0 | 30.6% | 55.4% |
+| G2 + kNN + neighbour text + graph | 0 | 24.2% | 54.1% |
 
 ![Automation frontier](../../research/reports/figures/automation_frontier.png)
 
-The pre-registered rule (graph better than both controls, lower CI bound > 0) is not met:
-G1 − C1 = −0.9 pp. The graph helps the strong text model (+4.9 pp over T1), but the same
-label information is available from retrieval. A strong text model is the main lever:
+The pre-registered rule (graph better than the controls in all three contrasts, lower CI
+bound > 0) is not met. G1 − C1 = −0.9 pp with interval [−7.0, −0.5] pp, and G2 − C1 =
+−2.2 pp [−6.0, −1.6]: adding the graph makes certified automation *lower* than retrieval
+alone. These intervals come from bootstrapping a certified quantity, which is biased
+downwards (§6); the point estimates point the same way. On the secondary metric (model_dev
+mRP, out-of-fold) G2 is the best system (+1.4 to +2.0 pp over C1), so better ranking does not
+translate into more certified automation. The graph helps the strong text model (+4.8 pp over
+T1), but the same label information is available from retrieval. A strong text model is the main lever:
 moving from TF-IDF to LEGAL-BERT + kNN multiplies certified automation at α = 0.05 by seven.
 
 ## 5. H2: certified tagging under source duplication
@@ -137,7 +148,7 @@ receive no incoming links. Stackers and thresholds stay fixed.
 8.2% to 10.9% (m = 10) and 15.9% (m ≥ 30), above the certified 10% (H2a met). Provenance kNN
 is exactly invariant up to m = 30 but drifts to 9.8% at m = 100 (H2b not met), because the
 fixed candidate window was exhausted by copies of nearby sources. Clean cost is nil (H2c
-met). Citation-graph votes move by at most 0.3 pp in every scenario.
+met). Citation-graph votes move by at most 0.4 pp in every scenario.
 
 **Protocol 2.1** (500 fresh targets disjoint from 2.0, adaptive window; confirmatory).
 All four rules hold:
@@ -146,10 +157,20 @@ All four rules hold:
 |---|---|
 | H2a naive kNN realised risk on targets | 8.3% → **16.3%** (95% CI 14.4–18.4%) |
 | H2b provenance kNN risk change | **0.0 pp** (95% CI 0.0–0.0) |
-| H2c clean AutoRecall, provenance − naive | +0.01 pp |
+| H2c clean AutoRecall, provenance − naive | +0.02 pp |
 | H2d citation-graph risk change | −0.1 pp (95% CI −0.4 to +0.3) |
 
-Naive kNN exceeds the certified level from m = 10 (11.6%). With 1% of tokens deleted,
+Naive kNN exceeds the certified level from m = 10 (11.6%). At m ≥ 20 copies fill all k = 20
+neighbour slots and naive kNN degenerates to 1-NN, which is why m = 30 and m = 100 coincide.
+
+*How to read these numbers.* (a) Targets are selected to be affected, while LTT bounds the
+marginal risk. With 19% of certification documents targeted, the marginal risk of naive kNN
+over all of risk_cert also exceeds α (8.7% → 13.8%). (b) Targets are risk_cert documents, so
+their clean risk is the certification-set risk; only the paired change is informative.
+Protocol 3.0 repeats the scenario on `final_test` targets. (c) H2b and H2d hold by
+construction for exact copies: identical vectors do not change a group's max similarity or
+its mean labels, and copies get no incoming links. Their confirmation shows that the
+implementation does what it should; it is not evidence about real data. With 1% of tokens deleted,
 provenance kNN stays within 0.1 pp of its clean risk at every m; with 5%, it degrades with
 naive kNN (copies are not detected), while the graph does not move.
 
@@ -189,7 +210,8 @@ copies act, which favours the weighted method.
 EviGraph Core service on RusLawOD (Saveliev & Kuchakov, 2024): 8,551 Russian federal acts
 with the official 21-section classifier, a TF-IDF engine, and the 1,000 newest acts held out
 as a later period. α = 10% certifies from about 500 reviewed acts and α = 5% from about 1,000.
-In every certified configuration the realised risk on the later acts stayed below α (2.2–7.2%).
+In every certified configuration, across both catalog levels (21 sections and 132 rubrics),
+the realised risk on the later acts stayed below α (1.4–7.2%).
 
 ## 6. Methodological note: bootstrapping a certified quantity
 
@@ -216,6 +238,17 @@ study duplication in the *retrieval pool* after certification, not in training d
 retrieval-augmented generation (Zou et al., 2025). Our setting is benign: copies carry their
 source's own labels. Even so, duplication alone breaks certified guarantees.
 
+*Copy detection and robust aggregation.* That copies are not independent evidence is an
+established principle. Truth discovery models source dependence so that copied false values
+do not win a vote (Dong et al., 2009). kNN's majority vote gives certified robustness to a
+bounded number of inserted training points (Jia et al., 2022). RobustRAG isolates passages and
+aggregates them securely against retrieval corruption (Xiang et al., 2024). Diversity
+re-ranking reduces redundant retrieval results (Carbonell & Goldstein, 1998). Our provenance
+aggregation is a simple instance of this family; the contribution is to measure how
+duplication interacts with a certified threshold. Related risk-control tools that we do not
+use yet are RCPS (Bates et al., 2021) and adaptive conformal inference under drift (Gibbs &
+Candès, 2021).
+
 *Legal classification.* MultiEURLEX (Chalkidis et al., 2021), LexGLUE (Chalkidis et al., 2022)
 and LEGAL-BERT (Chalkidis et al., 2020) are the benchmark and model base. Calibration of
 neural scores (Guo et al., 2017) motivates certifying on raw scores rather than on
@@ -224,9 +257,29 @@ recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation 
 
 ## 8. Limitations
 
-One seed for LEGAL-BERT; Clopper–Pearson assumes independent pairs; LEGAL-BERT was
-pre-trained on EUR-Lex text (no labels); copies are injected, not observed; provenance
-detection is MinHash-based; final_test has not been opened.
+* **Pair dependence.** Clopper–Pearson treats (document, concept) pairs as independent; they
+  are nested in documents and in template families. For the certified C1 threshold
+  (8,119 applied pairs, empirical risk 8.65%) the bound stays below α = 0.10 even if the
+  effective sample size is five times smaller (UCB 0.091 → 0.096). However, a document-level
+  bound (e.g. a betting or Hoeffding–Bentkus bound on a per-document loss) would be valid
+  without this assumption.
+* **Selection on risk_cert.** C1 was chosen as the best of six systems on risk_cert, and the
+  primary α = 0.10 was chosen from exploratory version-0 results on the same split. A
+  guarantee for the selected system would need a union bound over systems.
+* **The duplication is injected and targeted.** Natural cross-split copying is 0.04–0.06%.
+  The scenario copies each target's nearest neighbour, the worst case for kNN. A realistic
+  duplication process (template families, consolidated versions, paraphrases) and a curve of
+  detection rate vs. edit level are future work; at 5% token deletion MinHash detection
+  already fails, and a similarity-based collapse of retrieved candidates may close that gap.
+* **Missing baselines:** index-time deduplication, diversity re-ranking, per-cluster vote
+  caps, and periodic re-certification from a small labelled audit (the latter exists in the
+  EviGraph Core service but is not evaluated here).
+* **Transductive preprocessing.** Duplicate detection, split groups and hub sizes use the texts
+  and links of all documents, `final_test` included (not their labels). The rule that graph
+  neighbours are published before the document is enforced for the neighbour-text control
+  but not for graph votes; under the chronological split this has no effect.
+* One corpus and, until protocol 3.0, one LEGAL-BERT seed; LEGAL-BERT was pre-trained on
+  EUR-Lex text (no labels); `final_test` has not been opened.
 
 ## 9. Reproducibility
 
@@ -243,13 +296,17 @@ number and figure. Protocol versions, results and code are separate commits in o
   control. *ICLR 2024*. arXiv:2208.02814.
 * Barber, R. F., Candès, E. J., Ramdas, A., & Tibshirani, R. J. (2023). Conformal prediction
   beyond exchangeability. *Annals of Statistics*, 51(2), 816–845. doi:10.1214/23-AOS2276.
+* Bates, S., Angelopoulos, A., Lei, L., Malik, J., & Jordan, M. I. (2021). Distribution-free,
+  risk-controlling prediction sets. *Journal of the ACM*, 68(6), 43:1–43:34.
 * Broder, A. Z. (1997). On the resemblance and containment of documents. *Compression and
   Complexity of Sequences (SEQUENCES '97)*, 21–29.
-* Chalkidis, I., Fergadiotis, M., Malakasiotis, P., Aletras, N., & Androutsopoulos, I. (2020).
-  LEGAL-BERT: The Muppets straight out of Law School. *Findings of EMNLP 2020*, 2898–2904.
+* Carbonell, J., & Goldstein, J. (1998). The use of MMR, diversity-based reranking for
+  reordering documents and producing summaries. *SIGIR '98*, 335–336.
 * Chalkidis, I., Fergadiotis, M., & Androutsopoulos, I. (2021). MultiEURLEX — A multi-lingual
   and multi-label legal document classification dataset for zero-shot cross-lingual transfer.
   *EMNLP 2021*, 6974–6996. arXiv:2109.00904.
+* Chalkidis, I., Fergadiotis, M., Malakasiotis, P., Aletras, N., & Androutsopoulos, I. (2020).
+  LEGAL-BERT: The Muppets straight out of Law School. *Findings of EMNLP 2020*, 2898–2904.
 * Chalkidis, I., Jana, A., Hartung, D., Bommarito, M., Androutsopoulos, I., Katz, D. M., &
   Aletras, N. (2022). LexGLUE: A benchmark dataset for legal language understanding in
   English. *ACL 2022*, 4310–4330.
@@ -257,10 +314,16 @@ number and figure. Protocol versions, results and code are separate commits in o
   in the case of the binomial. *Biometrika*, 26(4), 404–413.
 * DeYoung, J., Jain, S., Rajani, N. F., Lehman, E., Xiong, C., Socher, R., & Wallace, B. C.
   (2020). ERASER: A benchmark to evaluate rationalized NLP models. *ACL 2020*, 4443–4458.
+* Dong, X. L., Berti-Equille, L., & Srivastava, D. (2009). Integrating conflicting data: the
+  role of source dependence. *PVLDB*, 2(1), 550–561.
 * Geifman, Y., & El-Yaniv, R. (2017). Selective classification for deep neural networks.
   *NeurIPS 2017*, 4878–4887.
+* Gibbs, I., & Candès, E. (2021). Adaptive conformal inference under distribution shift.
+  *NeurIPS 2021*. arXiv:2106.00170.
 * Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of modern neural
   networks. *ICML 2017*, PMLR 70, 1321–1330.
+* Jia, J., Liu, Y., Cao, X., & Gong, N. Z. (2022). Certified robustness of nearest neighbors
+  against data poisoning and backdoor attacks. *AAAI 2022*, 36(9), 9575–9583.
 * Lebo, T., Sahoo, S., & McGuinness, D. (Eds.) (2013). PROV-O: The PROV Ontology. W3C
   Recommendation, 30 April 2013.
 * Lee, K., Ippolito, D., Nystrom, A., Zhang, C., Eck, D., Callison-Burch, C., & Carlini, N.
@@ -268,6 +331,8 @@ number and figure. Protocol versions, results and code are separate commits in o
 * Saveliev, D., & Kuchakov, R. (2024). The Russian Legislative Corpus. arXiv:2406.04855.
 * Tibshirani, R. J., Barber, R. F., Candès, E. J., & Ramdas, A. (2019). Conformal prediction
   under covariate shift. *NeurIPS 2019*, 2530–2540.
+* Xiang, C., Wu, T., Zhong, Z., Wagner, D., Chen, D., & Mittal, P. (2024). Certifiably robust
+  RAG against retrieval corruption. arXiv:2405.15556.
 * Zou, W., Geng, R., Wang, B., & Jia, J. (2025). PoisonedRAG: Knowledge corruption attacks to
   retrieval-augmented generation of large language models. *USENIX Security 2025*.
 

@@ -37,7 +37,7 @@ from evigraph_research import protocol_v3 as cfg
 from evigraph_research import protocol_v21 as v21
 from evigraph_research.baseline import Timer, _stack_oof
 from evigraph_research.compare import _features
-from evigraph_research.h2 import _doc_stats
+from evigraph_research.h2 import _doc_stats, make_copies
 
 # system -> (feature blocks, pool aggregation); protocol 1.0 systems plus the 2.x variants
 SYSTEMS: dict[str, tuple[tuple[str, ...], str]] = {
@@ -213,55 +213,69 @@ def run(*, seeds: tuple[int, ...] = cfg.SEEDS, dry_run: bool = False) -> dict:  
         x_ft[t_pos], x_train, y_train, k=protocol.KNN_K, groups=None
     )
     sources = np.unique(top1)
-    deployed: dict[int, dict[str, dict]] = {}
-    for m in cfg.COPIES:
-        if m == 0:
-            continue
-        with timer.stage(f"copies_m{m}"):
-            src = np.repeat(sources, m)
-            n_cp = len(src)
-            x_pool = sp.vstack([x_train, x_train[src]], format="csr")
-            y_cp = y_train[src]
-            g_cp = groups_train[src]  # exact copies join their source's group
-            nv, pv, tp, _ = provenance.knn_both(
-                x_ft[t_pos],
-                x_pool,
-                np.vstack([y_train, y_cp]),
-                k=protocol.KNN_K,
-                groups=np.concatenate([groups_train.astype(object), g_cp.astype(object)]),
-                candidates=v21.KNN_CANDIDATES,
-                adaptive=True,
-            )
-            cp_ids = [f"COPY{i}" for i in range(n_cp)]
-            copy_map = pd.DataFrame(
-                {"copy": cp_ids, "src": np.array(celex, dtype=object)[train_idx[src]]}
-            )
-            cp_edges = copy_map.merge(edges, on="src").drop(columns="src")
-            cp_edges = cp_edges.rename(columns={"copy": "src"})
-            ext_edges = pd.concat([edges, cp_edges[edges.columns]], ignore_index=True)
-            ext_args = (
-                celex + cp_ids,
-                np.concatenate([is_train, np.ones(n_cp, bool)]),
-                np.vstack([y, y_cp]),
-                ext_edges,
-            )
-            g_ext = np.concatenate([groups_all.astype(object), g_cp.astype(object)])
-            deployed[m] = {}
-            for kind, votes in (("naive", nv), ("prov", pv)):
-                gf = provenance.graph_features(
-                    *ext_args,
-                    groups=None if kind == "naive" else g_ext,
-                    hub_cap=protocol.HUB_CAP,
+    members = [np.flatnonzero(top1 == src) for src in sources]  # targets of each source
+    src_texts = fr["text"].iloc[train_idx[sources]].tolist()
+    deployed: dict[tuple[float, int], dict[str, dict]] = {}
+    detection: dict[str, dict] = {}
+    for rate in cfg.NOISE:
+        copies = make_copies(sources, src_texts, x_train, tf, rate=rate, n_jobs=n_jobs, cfg=v21)
+        detection[str(rate)] = {
+            "joined_source_group": round(float(copies.same_group.mean()), 4),
+            "mean_jaccard": round(float(copies.jaccard.mean()), 4),
+        }
+        for m in cfg.COPIES:
+            if m == 0:
+                continue
+            with timer.stage(f"copies_noise{rate}_m{m}"):
+                sel = copies.rank < m
+                src = copies.source[sel]
+                n_cp = len(src)
+                x_pool = sp.vstack([x_train, copies.x[sel]], format="csr")
+                y_cp = y_train[src]
+                g_cp = np.where(
+                    copies.same_group[sel],
+                    groups_train[src].astype(object),
+                    np.array([f"copy:{i}" for i in range(n_cp)], dtype=object),
                 )
-                gf.votes = {k: v[: len(fr)] for k, v in gf.votes.items()}
-                gf.degree = {k: v[: len(fr)] for k, v in gf.degree.items()}
-                d = dict(base[kind])
-                d["knn_vote"] = d["knn_vote"].copy()
-                d["knn_top"] = d["knn_top"].copy()
-                d["knn_vote"][targets] = votes
-                d["knn_top"][targets] = tp
-                d["graph"] = gf
-                deployed[m][kind] = d
+                nv, pv, tp, _ = provenance.knn_both(
+                    x_ft[t_pos],
+                    x_pool,
+                    np.vstack([y_train, y_cp]),
+                    k=protocol.KNN_K,
+                    groups=np.concatenate([groups_train.astype(object), g_cp]),
+                    candidates=v21.KNN_CANDIDATES,
+                    adaptive=True,
+                )
+                cp_ids = [f"COPY{i}" for i in range(n_cp)]
+                copy_map = pd.DataFrame(
+                    {"copy": cp_ids, "src": np.array(celex, dtype=object)[train_idx[src]]}
+                )
+                cp_edges = copy_map.merge(edges, on="src").drop(columns="src")
+                cp_edges = cp_edges.rename(columns={"copy": "src"})
+                ext_edges = pd.concat([edges, cp_edges[edges.columns]], ignore_index=True)
+                ext_args = (
+                    celex + cp_ids,
+                    np.concatenate([is_train, np.ones(n_cp, bool)]),
+                    np.vstack([y, y_cp]),
+                    ext_edges,
+                )
+                g_ext = np.concatenate([groups_all.astype(object), g_cp])
+                deployed[rate, m] = {}
+                for kind, votes in (("naive", nv), ("prov", pv)):
+                    gf = provenance.graph_features(
+                        *ext_args,
+                        groups=None if kind == "naive" else g_ext,
+                        hub_cap=protocol.HUB_CAP,
+                    )
+                    gf.votes = {k: v[: len(fr)] for k, v in gf.votes.items()}
+                    gf.degree = {k: v[: len(fr)] for k, v in gf.degree.items()}
+                    d = dict(base[kind])
+                    d["knn_vote"] = d["knn_vote"].copy()
+                    d["knn_top"] = d["knn_top"].copy()
+                    d["knn_vote"][targets] = votes
+                    d["knn_top"][targets] = tp
+                    d["graph"] = gf
+                    deployed[rate, m][kind] = d
 
     # ---- per seed: fit, certify, evaluate
     results: dict[str, Any] = {
@@ -270,13 +284,16 @@ def run(*, seeds: tuple[int, ...] = cfg.SEEDS, dry_run: bool = False) -> dict:  
         "final_docs": len(ft),
         "targets": len(targets),
         "distinct_sources": len(sources),
+        "copy_detection": detection,
         "seeds": {},
     }
     groups_md = fr["split_group"].iloc[md].to_numpy()
     boot_rng = np.random.default_rng(cfg.BOOTSTRAP_SEED)
     boots_ft = [boot_rng.integers(0, len(ft), len(ft)) for _ in range(cfg.BOOTSTRAP_RESAMPLES)]
+    # F3 intervals resample sources (clusters of targets sharing a copied source)
     boots_t = [
-        boot_rng.integers(0, len(targets), len(targets)) for _ in range(cfg.BOOTSTRAP_RESAMPLES)
+        np.concatenate([members[c] for c in boot_rng.integers(0, len(members), len(members))])
+        for _ in range(cfg.BOOTSTRAP_RESAMPLES)
     ]
     for seed in seeds:
         evals_path, final_path = _strong_files(seed)
@@ -337,7 +354,7 @@ def _evaluate_seed(
     t_pos = np.searchsorted(ft, targets)
     systems: dict[str, dict] = {}
     stats_ft: dict[str, np.ndarray] = {}
-    stats_t: dict[str, dict[int, np.ndarray]] = {}
+    stats_t: dict[str, dict[tuple[float, int], np.ndarray]] = {}
     for name, (blocks, kind) in SYSTEMS.items():
         data = dict(base[kind], p_strong=p_strong)
         _, model = _stack_oof(
@@ -385,13 +402,13 @@ def _evaluate_seed(
 
         if name in F3_SYSTEMS:
             t_alpha = tau[cfg.ALPHA]
-            stats_t[name] = {0: stats_ft[name][t_pos]}
-            for m, by_kind in deployed.items():
+            stats_t[name] = {(0.0, 0): stats_ft[name][t_pos]}
+            for (rate, m), by_kind in deployed.items():
                 d = dict(by_kind[kind], p_strong=p_strong)
                 s_t = model.predict_proba(_features(targets, blocks, d, prior, n_lab))[:, 1]
                 s_t = s_t.reshape(len(targets), n_lab)
                 auto = s_t >= t_alpha if t_alpha is not None else np.zeros_like(y[targets])
-                stats_t[name][m] = _doc_stats(y[targets], auto)
+                stats_t[name][rate, m] = _doc_stats(y[targets], auto)
 
     contrasts: list[dict[str, Any]] = []
     for treat, ctrl in protocol.H1_CONTRASTS:
@@ -411,12 +428,16 @@ def _evaluate_seed(
 
     h2_table = []
     for name, by_m in stats_t.items():
-        base_st = by_m[0]
-        for m, st in by_m.items():
+        base_st = by_m[0.0, 0]
+        for (rate, m), st in by_m.items():
+            st_all = stats_ft[name].copy()  # marginal: every final_test document
+            st_all[t_pos] = st
             h2_table.append(
                 {
                     "system": name,
+                    "noise": rate,
                     "copies": m,
+                    "risk_all": round(_risk(st_all), 4),
                     "risk_targets": round(_risk(st), 4),
                     "auto_recall_targets": round(_auto_recall(st), 4),
                     "risk_targets_ci95": _ci([_risk(st[b]) for b in boots_t]),
@@ -424,8 +445,8 @@ def _evaluate_seed(
                 }
             )
 
-    def find(name: str, m: int) -> dict:
-        return next(r for r in h2_table if (r["system"], r["copies"]) == (name, m))
+    def find(name: str, m: int) -> dict:  # decision rules use exact copies
+        return next(r for r in h2_table if (r["system"], r["noise"], r["copies"]) == (name, 0.0, m))
 
     m_max = max(cfg.COPIES)
     c1, c1p, g1 = (

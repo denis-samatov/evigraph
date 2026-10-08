@@ -234,6 +234,24 @@ Intervals: 1,000 document-bootstrap resamples, seed 9. Every rule is evaluated p
 reported as "holds in k of 3 seeds"; a rule is confirmed only with 3 of 3. If a seed has not
 finished training, the verdict uses the available seeds and the report says so.
 
+## 17. Amendment before opening (after an independent review)
+
+Made on 2026-10-08, before `final_test` was opened, in response to the review in
+[`REVIEW_LOG.md`](REVIEW_LOG.md). Decision rules are unchanged.
+
+* The reference pool for `final_test` documents is `train` only, as for every earlier split.
+* F3 also reports edited copies (1% and 5% of tokens deleted) without a decision rule. The open
+  question is the copy detector: for exact copies H2b and H2d hold by construction, so their
+  confirmation checks the implementation, not the data.
+* F3 intervals resample copied sources: targets that share a source form one cluster.
+* Marginal risk over all `final_test` documents is reported next to the targeted risk.
+* F3 compares every scenario with m = 0 on the same documents, so it is interpretable even if
+  F1 finds temporal drift. Seeds share one test set; they measure training variance, not
+  independent replications.
+* The runner (`final.py`) is committed before opening and is first run with `--dry-run`,
+  where `risk_cert` stands in for `final_test` and the feature path is checked against the
+  certification-time features.
+
 ## History
 
 | Version | Date | Change |
@@ -245,3 +263,4 @@ finished training, the verdict uses the available seeds and the report says so.
 | 2.1 | 2026-10-08 | part 3: adaptive candidate window, fresh targets, rule H2d; registered after the 2.0 results and before the 2.1 run |
 | — | 2026-10-08 | document translated from Russian to English; no change in substance (the Russian original is in the git history) |
 | 3.0 | 2026-10-08 | part 4: single evaluation on `final_test` with three LEGAL-BERT seeds; registered before `final_test` was opened |
+| 3.0 | 2026-10-08 | section 17: amendment after an independent review, before `final_test` was opened (edited copies reported, source-clustered bootstrap, marginal risk, pool specified) |

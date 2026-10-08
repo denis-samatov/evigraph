@@ -23,9 +23,11 @@ was run; the final test split is opened once, in protocol 3.0, after the extra s
    With 30 copies of a source, the realised risk on affected documents is 16.3% at a certified
    10% (confirmatory run, [protocol 2.1 results](research/reports/PROTOCOL_V21_RESULTS.md);
    first attempt: [2.0](research/reports/PROTOCOL_V2_RESULTS.md)).
-3. **Provenance-aware aggregation restores the guarantee** for recognisable copies (risk change
-   exactly 0) at no cost on clean data; **the citation graph is robust by itself** (−0.1 pp),
-   because a copy with a new identifier receives no incoming links.
+3. **Provenance-aware aggregation removes the effect of copies the detector recognises** (by
+   construction for exact copies) at no cost on clean data, but not of edited copies that
+   MinHash misses; **the citation graph is unaffected** (−0.1 pp), because a copy with a new
+   identifier receives no incoming links. An independent critical review of these claims is
+   in [`docs/REVIEW_LOG.md`](docs/REVIEW_LOG.md).
 4. **Strong text is the main lever:** at α = 5% automation grows from 4.9% (TF-IDF) to 34.3%
    (LEGAL-BERT + kNN).
 

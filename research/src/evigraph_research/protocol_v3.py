@@ -38,6 +38,16 @@ RESULTS_FILE = "final_results_v3.json"
 #    with TARGETS final_test documents drawn with FINAL_TARGET_SEED; rules H2a-H2d of 2.1.
 FINAL_TARGET_SEED = 8
 COPIES = (0, 10, 30, 100)
+# Amendment before opening (independent review, 2026-10-08):
+# * the reference pool for final_test is train only, as for every earlier split;
+# * edited copies (NOISE > 0) are reported without a decision rule: the open question is the
+#   copy detector, and H2b / H2d hold by construction for exact copies;
+# * F3 intervals resample sources (targets sharing a copied source are one cluster);
+# * marginal risk over all final_test documents is reported next to the targeted risk;
+# * F3 rules compare each scenario with m = 0 on the same documents, so they are interpretable
+#   even if F1 finds temporal drift; seeds share one test set and are not independent
+#   replications.
+NOISE = (0.0, 0.01, 0.05)
 # Seeds: every rule is evaluated per seed and reported as "holds in k of 3 seeds"; a rule is
 # confirmed only with 3 of 3. If a seed has not finished training, the verdict uses the
 # available seeds and the report says so.
