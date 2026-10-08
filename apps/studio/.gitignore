@@ -1,0 +1,16 @@
+tsconfig.tsbuildinfo
+node_modules
+lib
+out
+dist
+tsconfig.tsbuildinfo
+
+# EviGraph Studio
+workspace/graphs/
+evigraph-theia/logs/*
+!evigraph-theia/logs/.gitkeep
+.claude/
+evigraph-studio-app/src-gen/
+evigraph-studio-app/gen-esbuild.*.mjs
+evigraph-studio-app/esbuild.mjs
+evigraph-studio-app/logs/

@@ -1,0 +1,18 @@
+{
+  "extends": "@eclipse-glsp/ts-config",
+  "include": [],
+  "compilerOptions": {
+    "composite": true
+  },
+  "references": [
+    {
+      "path": "./evigraph-glsp-server"
+    },
+    {
+      "path": "./evigraph-glsp-client"
+    },
+    {
+      "path": "./evigraph-theia"
+    }
+  ]
+}

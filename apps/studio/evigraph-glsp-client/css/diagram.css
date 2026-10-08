@@ -1,0 +1,17 @@
+/* EviGraph local graph. Colours follow the reference palette: blue = concepts,
+   orange = reviewed evidence documents, grey = provenance copies. */
+.evigraph-node > .sprotty-node { stroke-width: 1.5px; rx: 6px; }
+.evigraph-document > .sprotty-node { fill: #1c5cab; stroke: #0d366b; }
+.evigraph-document .sprotty-label { fill: #ffffff; font-weight: 600; }
+.evigraph-concept > .sprotty-node { fill: #cde2fb; stroke: #2a78d6; }
+.evigraph-reviewed_document > .sprotty-node { fill: #fde3d6; stroke: #eb6834; }
+.evigraph-copy > .sprotty-node { fill: #f0efec; stroke: #8a8984; stroke-dasharray: 4 3; }
+.evigraph-state-accepted > .sprotty-node { stroke: #008300; stroke-width: 2.5px; }
+.evigraph-state-rejected > .sprotty-node { stroke: #e34948; stroke-width: 2.5px; opacity: 0.7; }
+.evigraph-state-auto_applied > .sprotty-node { stroke: #4a3aa7; stroke-width: 2.5px; }
+.evigraph-error > .sprotty-node { fill: #fdecec; stroke: #e34948; }
+.evigraph-node .sprotty-label { font-size: 12px; fill: #0b0b0b; }
+.sprotty-edge { stroke: #8a8984; stroke-width: 1.5px; fill: none; }
+.evigraph-edge-asserts { stroke: #2a78d6; }
+.evigraph-edge-supported_by { stroke: #eb6834; stroke-dasharray: 5 3; }
+.evigraph-edge-same_provenance { stroke: #52514e; stroke-dasharray: 2 3; }

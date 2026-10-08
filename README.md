@@ -49,6 +49,7 @@ docker compose up --build        # API on http://localhost:8000/docs
 | [`docs/paper/draft.md`](docs/paper/draft.md) | paper draft |
 | [`research/`](research/README.md) | research code, tests, reports |
 | [`services/core/`](services/core/README.md) | EviGraph Core service (FastAPI, PostgreSQL) |
+| [`apps/studio/`](apps/studio/README.md) | EviGraph Studio IDE (Theia + GLSP) |
 | [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | product milestones and status |
 | `research/reports/` | JSON results and a report per protocol version |
 | `research/reports/figures/` | paper figures |
