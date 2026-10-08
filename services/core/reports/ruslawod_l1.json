@@ -1,0 +1,210 @@
+[
+  {
+    "catalog": "ruslawod-l1-n300",
+    "concepts": 21,
+    "reviewed_documents": 300,
+    "release": {
+      "kind": "trained",
+      "fit_documents": 224,
+      "fit_groups": 224,
+      "text_models": 18
+    },
+    "evaluation_documents": 1000,
+    "top1_precision": 0.93,
+    "mrp": 0.6372,
+    "certifications": {
+      "0.1": {
+        "status": "failed",
+        "tau": null,
+        "cert_documents": 76,
+        "ucb": 1.0,
+        "auto_recall_heldout": 0.0,
+        "reason": "no threshold reaches alpha=0.1 at delta=0.1 on 76 documents"
+      },
+      "0.05": {
+        "status": "failed",
+        "tau": null,
+        "cert_documents": 76,
+        "ucb": 1.0,
+        "auto_recall_heldout": 0.0,
+        "reason": "no threshold reaches alpha=0.05 at delta=0.1 on 76 documents"
+      }
+    },
+    "seconds": {
+      "ingest_and_review": 4,
+      "total": 6
+    }
+  },
+  {
+    "catalog": "ruslawod-l1-n500",
+    "concepts": 21,
+    "reviewed_documents": 500,
+    "release": {
+      "kind": "trained",
+      "fit_documents": 343,
+      "fit_groups": 343,
+      "text_models": 19
+    },
+    "evaluation_documents": 1000,
+    "top1_precision": 0.944,
+    "mrp": 0.6563,
+    "certifications": {
+      "0.1": {
+        "status": "active",
+        "tau": 0.958496630191803,
+        "cert_documents": 157,
+        "ucb": 0.08805,
+        "auto_recall_heldout": 0.1779,
+        "reason": null,
+        "eval_applied": 669,
+        "eval_realised_risk": 0.0254,
+        "eval_auto_recall": 0.2066,
+        "eval_docs_fully_auto": 0.058
+      },
+      "0.05": {
+        "status": "failed",
+        "tau": null,
+        "cert_documents": 157,
+        "ucb": 1.0,
+        "auto_recall_heldout": 0.0,
+        "reason": "no threshold reaches alpha=0.05 at delta=0.1 on 157 documents"
+      }
+    },
+    "seconds": {
+      "ingest_and_review": 6,
+      "total": 10
+    }
+  },
+  {
+    "catalog": "ruslawod-l1-n1000",
+    "concepts": 21,
+    "reviewed_documents": 1000,
+    "release": {
+      "kind": "trained",
+      "fit_documents": 701,
+      "fit_groups": 701,
+      "text_models": 21
+    },
+    "evaluation_documents": 1000,
+    "top1_precision": 0.952,
+    "mrp": 0.7051,
+    "certifications": {
+      "0.1": {
+        "status": "active",
+        "tau": 0.8656400442123413,
+        "cert_documents": 299,
+        "ucb": 0.09469,
+        "auto_recall_heldout": 0.3399,
+        "reason": null,
+        "eval_applied": 1092,
+        "eval_realised_risk": 0.0495,
+        "eval_auto_recall": 0.3289,
+        "eval_docs_fully_auto": 0.116
+      },
+      "0.05": {
+        "status": "active",
+        "tau": 0.9438027143478394,
+        "cert_documents": 299,
+        "ucb": 0.04185,
+        "auto_recall_heldout": 0.262,
+        "reason": null,
+        "eval_applied": 843,
+        "eval_realised_risk": 0.0285,
+        "eval_auto_recall": 0.2595,
+        "eval_docs_fully_auto": 0.082
+      }
+    },
+    "seconds": {
+      "ingest_and_review": 15,
+      "total": 23
+    }
+  },
+  {
+    "catalog": "ruslawod-l1-n2000",
+    "concepts": 21,
+    "reviewed_documents": 2000,
+    "release": {
+      "kind": "trained",
+      "fit_documents": 1399,
+      "fit_groups": 1398,
+      "text_models": 21
+    },
+    "evaluation_documents": 1000,
+    "top1_precision": 0.958,
+    "mrp": 0.7382,
+    "certifications": {
+      "0.1": {
+        "status": "active",
+        "tau": 0.7532491683959961,
+        "cert_documents": 601,
+        "ucb": 0.09589,
+        "auto_recall_heldout": 0.4595,
+        "reason": null,
+        "eval_applied": 1472,
+        "eval_realised_risk": 0.072,
+        "eval_auto_recall": 0.4328,
+        "eval_docs_fully_auto": 0.193
+      },
+      "0.05": {
+        "status": "active",
+        "tau": 0.9242637157440186,
+        "cert_documents": 601,
+        "ucb": 0.04529,
+        "auto_recall_heldout": 0.3023,
+        "reason": null,
+        "eval_applied": 999,
+        "eval_realised_risk": 0.031,
+        "eval_auto_recall": 0.3067,
+        "eval_docs_fully_auto": 0.123
+      }
+    },
+    "seconds": {
+      "ingest_and_review": 15,
+      "total": 30
+    }
+  },
+  {
+    "catalog": "ruslawod-l1-n4000",
+    "concepts": 21,
+    "reviewed_documents": 4000,
+    "release": {
+      "kind": "trained",
+      "fit_documents": 2819,
+      "fit_groups": 2818,
+      "text_models": 21
+    },
+    "evaluation_documents": 1000,
+    "top1_precision": 0.97,
+    "mrp": 0.7852,
+    "certifications": {
+      "0.1": {
+        "status": "active",
+        "tau": 0.7808813452720642,
+        "cert_documents": 1181,
+        "ucb": 0.0905,
+        "auto_recall_heldout": 0.5228,
+        "reason": null,
+        "eval_applied": 1531,
+        "eval_realised_risk": 0.0607,
+        "eval_auto_recall": 0.4556,
+        "eval_docs_fully_auto": 0.21
+      },
+      "0.05": {
+        "status": "active",
+        "tau": 0.9353947639465332,
+        "cert_documents": 1181,
+        "ucb": 0.0451,
+        "auto_recall_heldout": 0.3752,
+        "reason": null,
+        "eval_applied": 1068,
+        "eval_realised_risk": 0.0215,
+        "eval_auto_recall": 0.3311,
+        "eval_docs_fully_auto": 0.131
+      }
+    },
+    "seconds": {
+      "ingest_and_review": 51,
+      "total": 78
+    }
+  }
+]

@@ -150,5 +150,59 @@ def demo_multieurlex(
     )
 
 
+@app.command("benchmark-ruslawod")
+def benchmark_ruslawod(
+    parquet: Annotated[list[Path], typer.Option(help="RusLawOD parquet file(s)")],
+    out: Annotated[Path, typer.Option(help="JSON report")],
+    level: int = 1,
+    sizes: str = "300,500,1000,2000,4000",
+    evaluation: int = 1000,
+    seed: int = 0,
+) -> None:
+    """Pilot benchmark on Russian legislation: reviewed-set sizes x certification."""
+    import json
+    import random
+
+    from evigraph_core.benchmark import run_pilot
+    from evigraph_core.datasets import ruslawod
+    from evigraph_core.db import get_engine, session_factory
+    from evigraph_core.settings import get_settings
+
+    settings = get_settings()
+    factory = session_factory(get_engine(settings.database_url))
+    corpus = ruslawod.load(parquet, level=level)
+    pool, later, concepts = ruslawod.split(corpus, evaluation=evaluation)
+    typer.echo(
+        f"{len(corpus.frame)} classified acts, {len(concepts)} concepts at level {level}; "
+        f"pool {len(pool)} (to {corpus.frame['date'].iloc[len(pool) - 1].date()}), "
+        f"evaluation {len(later)} later acts"
+    )
+    results = []
+    for n in [int(x) for x in sizes.split(",")]:
+        reviewed = random.Random(seed).sample(pool, min(n, len(pool)))  # noqa: S311
+        r = run_pilot(
+            factory,
+            settings,
+            name=f"ruslawod-l{level}-n{n}",
+            concepts=concepts,
+            reviewed=reviewed,
+            evaluation=later,
+            source_system="pravo.gov.ru",
+        )
+        results.append(r)
+        c = r["certifications"]
+        typer.echo(
+            f"N={n}: top1 {r['top1_precision']} mRP {r['mrp']} | "
+            + " | ".join(
+                f"a={a}: {v['status']} risk {v.get('eval_realised_risk')} "
+                f"auto {v.get('eval_auto_recall')}"
+                for a, v in c.items()
+            )
+            + f" | {r['seconds']['total']}s"
+        )
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(results, ensure_ascii=False, indent=2))
+
+
 def main() -> None:
     app()

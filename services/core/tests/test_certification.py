@@ -35,6 +35,18 @@ def test_cp_bounds_and_planner_are_consistent() -> None:
     assert policy.pairs_needed(alpha=0.05, delta=0.1, expected_risk=0.05) is None
 
 
+def test_grid_start_leaves_room_for_zero_error_certification() -> None:
+    n_min = policy.zero_error_minimum(0.05, 0.1)
+    assert policy.cp_upper(0, n_min, 0.1) <= 0.05 < policy.cp_upper(0, n_min - 1, 0.1)
+    start = policy.grid_start(
+        alpha=0.05, delta=0.1, fit_documents=2800, cert_documents=1200, floor=50
+    )
+    assert start * 1200 / 2800 >= 2 * n_min
+    assert (
+        policy.grid_start(alpha=0.5, delta=0.1, fit_documents=10, cert_documents=10, floor=50) == 50
+    )
+
+
 def test_planner_endpoint(client: TestClient) -> None:
     r = client.get(
         "/planning/certification",

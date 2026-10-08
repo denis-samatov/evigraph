@@ -6,6 +6,7 @@ the strictest to the most permissive with a one-sided Clopper-Pearson bound; tes
 the first non-rejection; the most permissive rejected threshold is certified. FWER <= delta.
 """
 
+import math
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -33,6 +34,22 @@ def thresholds(scores: np.ndarray, *, min_applied: int, ratio: float = 1.1) -> n
         counts.append(round(c))
         c *= ratio
     return np.unique(s[np.unique(counts) - 1])[::-1]
+
+
+def zero_error_minimum(alpha: float, delta: float) -> int:
+    """Smallest n for which n applied pairs with no error certify alpha: (1-alpha)^n <= delta."""
+    return math.ceil(math.log(delta) / math.log(1 - alpha))
+
+
+def grid_start(
+    *, alpha: float, delta: float, fit_documents: int, cert_documents: int, floor: int
+) -> int:
+    """Pairs the strictest threshold applies on the fit part, chosen so that it is expected to
+    apply at least twice the zero-error minimum on the (smaller) certification part."""
+    if cert_documents == 0:
+        return floor
+    need = 2 * zero_error_minimum(alpha, delta) * fit_documents / cert_documents
+    return max(floor, math.ceil(need))
 
 
 @dataclass

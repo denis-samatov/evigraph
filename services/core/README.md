@@ -37,6 +37,11 @@ provenance groups, 623 held out):
 | 200 new documents from a later period | top-1 suggestion correct 83%; 221 tags auto-applied with a **realised error rate of 6.3%**; 21% of all correct tags automated |
 | Runtime on a laptop | 76 s end to end |
 
+**Russian legislation (RusLawOD, 21 classifier sections, evaluation on acts from 2023–2026):**
+auto-apply certifies at α = 10% from ~500 reviewed documents and at α = 5% from ~1,000; with
+4,000 reviewed documents 46% of tags are automated at α = 10% with a realised error rate of
+6.1% on later acts. Details: [`reports/RUSLAWOD_BENCHMARK.md`](reports/RUSLAWOD_BENCHMARK.md).
+
 ## Running
 
 ```bash

@@ -56,10 +56,17 @@ def certify_release(
     }
     concepts = [by_id[c] for c in bundle["concept_ids"]]
     cert = releases.reviewed(session, version, concepts, part="cert")
+    # The strictest threshold must apply enough held-out pairs that zero errors could certify
+    # alpha at all; its position is set from alpha, delta and the split sizes only.
+    min_applied = policy.grid_start(
+        alpha=alpha,
+        delta=delta,
+        fit_documents=engine.oof_scores.shape[0],
+        cert_documents=len(cert.version_ids),
+        floor=settings.cert_grid_min_applied,
+    )
     grid = policy.thresholds(
-        engine.oof_scores,
-        min_applied=settings.cert_grid_min_applied,
-        ratio=settings.cert_grid_ratio,
+        engine.oof_scores, min_applied=min_applied, ratio=settings.cert_grid_ratio
     )
 
     result = policy.Certification(tau=None)
@@ -105,6 +112,7 @@ def certify_release(
         auto_recall=round(auto_recall, 4),
         details={
             "grid_size": len(grid),
+            "grid_min_applied": min_applied,
             "tested": result.tested[-3:],
             "cert_data_sha256": hashlib.sha256(
                 "\n".join(sorted(map(str, cert.version_ids))).encode()
