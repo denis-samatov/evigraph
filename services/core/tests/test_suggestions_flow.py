@@ -93,3 +93,50 @@ def test_cold_start_then_trained_release(client: TestClient) -> None:
 
     queue = client.get(f"/catalog-versions/{version['id']}/review-queue").json()
     assert queue and all(item["undecided"] > 0 for item in queue)
+
+
+def test_studio_read_models(client: TestClient) -> None:
+    project, version, ids = _setup(client)
+    texts, y = corpus(60)
+    docs = []
+    for t, labels in zip(texts, y, strict=True):
+        doc = client.post(f"/projects/{project['id']}/documents", json={"text": t}).json()["id"]
+        docs.append(doc)
+        _review_fully(client, doc, version["id"], ids, [j for j in range(3) if labels[j]])
+    client.post(f"/catalog-versions/{version['id']}/releases")
+    new = client.post(
+        f"/projects/{project['id']}/documents", json={"text": texts[0], "title": "copy of 0"}
+    ).json()["id"]
+    client.post(
+        f"/document-versions/{new}/suggestions",
+        json={"catalog_version_id": version["id"], "top_k": 3},
+    )
+
+    assert any(p["id"] == project["id"] for p in client.get("/projects").json())
+    cats = client.get(f"/projects/{project['id']}/catalogs").json()
+    assert cats[0]["versions"][0]["status"] == "published"
+    listing = client.get(f"/projects/{project['id']}/documents").json()
+    assert listing[0]["version_id"] == new and listing[0]["group_size"] == 2
+    assert client.get(f"/document-versions/{new}/text").json()["text"] == texts[0]
+
+    view = client.get(
+        f"/document-versions/{new}/review", params={"catalog_version_id": version["id"]}
+    ).json()
+    assert len(view["assertions"]) == 3 and view["completed"] is False
+    assert all(a["decision"] == "needs_review" for a in view["assertions"])
+
+    graph = client.get(
+        f"/document-versions/{new}/graph", params={"catalog_version_id": version["id"]}
+    ).json()
+    kinds = {n["kind"] for n in graph["nodes"]}
+    assert {"document", "concept"} <= kinds
+    # the original of the copy is both a supporting reviewed document and in its provenance
+    # group: one node, two kinds of edges
+    original = f"doc:{docs[0]}"
+    assert any(e["kind"] == "same_provenance" and e["target"] == original for e in graph["edges"])
+    assert any(e["kind"] == "supported_by" for e in graph["edges"])
+    preflight = client.options(
+        "/projects",
+        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "GET"},
+    )
+    assert preflight.headers.get("access-control-allow-origin") == "http://localhost:3000"

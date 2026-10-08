@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://evigraph@127.0.0.1:54329/evigraph"
     artifact_dir: Path = Path("artifacts")
+    cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]  # Studio
 
     # Provenance: near-duplicate detection (word 5-gram MinHash, 128 permutations, LSH).
     minhash_perm: int = 128

@@ -1,6 +1,7 @@
 """FastAPI application factory."""
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
@@ -10,6 +11,7 @@ from evigraph_core.api.routes_certification import router as certification_route
 from evigraph_core.api.routes_engine import router as engine_router
 from evigraph_core.api.routes_evidence import router as evidence_router
 from evigraph_core.api.routes_review import router as review_router
+from evigraph_core.api.routes_studio import router as studio_router
 from evigraph_core.db import get_engine, session_factory
 from evigraph_core.settings import Settings, get_settings
 
@@ -19,6 +21,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="EviGraph Core", version="0.1.0")
     app.state.settings = settings
     app.state.session_factory = session_factory(get_engine(settings.database_url))
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["content-type"],
+    )
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -57,4 +65,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(engine_router)
     app.include_router(certification_router)
     app.include_router(evidence_router)
+    app.include_router(studio_router)
     return app
