@@ -66,21 +66,21 @@ def _noisy(text: str, rate: float, rng: np.random.Generator) -> str:
 
 
 def make_copies(
-    sources: np.ndarray, src_texts: list[str], x_train, tf, *, rate: float, n_jobs: int
+    sources: np.ndarray, src_texts: list[str], x_train, tf, *, rate: float, n_jobs: int, cfg
 ) -> Copies:
-    m_max = max(p2.COPIES)
+    m_max = max(cfg.COPIES)
     source = np.repeat(sources, m_max)
     rank = np.tile(np.arange(m_max), len(sources))
     if rate == 0.0:
         n = len(source)
         return Copies(source, rank, x_train[source], np.ones(n, bool), np.ones(n, np.float32))
-    rng = np.random.default_rng(p2.NOISE_SEED + int(rate * 1000))
+    rng = np.random.default_rng(cfg.NOISE_SEED + int(rate * 1000))
     texts = [_noisy(src_texts[i // m_max], rate, rng) for i in range(len(source))]
     x = tf.transform(textmodel.counts(texts, n_features=x_train.shape[1], n_jobs=n_jobs))
     sig_src = dedup.signatures(src_texts, mask_digits=False)
     sig_cp = dedup.signatures(texts, mask_digits=False)
     jac = (sig_cp == np.repeat(sig_src, m_max, axis=0)).mean(axis=1).astype(np.float32)
-    return Copies(source, rank, x.astype(np.float32).tocsr(), jac >= p2.PROVENANCE_THRESHOLD, jac)
+    return Copies(source, rank, x.astype(np.float32).tocsr(), jac >= cfg.PROVENANCE_THRESHOLD, jac)
 
 
 def _doc_stats(y: np.ndarray, auto: np.ndarray) -> np.ndarray:
@@ -100,7 +100,8 @@ def _auto_recall(stats: np.ndarray) -> float:
     return float(stats[:, 2].sum() / g) if g else float("nan")
 
 
-def run() -> dict:
+def run(cfg=p2) -> dict:
+    adaptive = getattr(cfg, "ADAPTIVE_CANDIDATES", False)
     timer = Timer()
     n_jobs = max(1, (os.cpu_count() or 2) - 1)
     with timer.stage("load"):
@@ -150,7 +151,8 @@ def run() -> dict:
             y_pool,
             k=protocol.KNN_K,
             groups=g_pool,
-            candidates=p2.KNN_CANDIDATES,
+            candidates=cfg.KNN_CANDIDATES,
+            adaptive=adaptive,
         )
         out = {}
         for kind, votes in (("naive", naive), ("prov", prov)):
@@ -173,7 +175,8 @@ def run() -> dict:
     clean_graph = (celex, is_train, y, edges, groups_all)
     with timer.stage("clean_features"):
         feats = _cached_clean(
-            lambda: pool_features(x_train, y_train, groups_train, eval_rows, clean_graph)
+            lambda: pool_features(x_train, y_train, groups_train, eval_rows, clean_graph),
+            cfg=cfg,
         )
 
     fitted: dict[str, Fitted] = {}
@@ -193,7 +196,7 @@ def run() -> dict:
             )
             tau = {
                 a: policy.certify(r_rc, y[rc], grid, alpha=a, delta=protocol.DELTA).tau
-                for a in (p2.ALPHA, p2.ALPHA_SECONDARY)
+                for a in (cfg.ALPHA, cfg.ALPHA_SECONDARY)
             }
             fitted[name] = Fitted(model, tau)
             clean[name] = {
@@ -204,8 +207,13 @@ def run() -> dict:
             }
 
     # Targets and their sources (nearest train document by TF-IDF cosine).
-    rng = np.random.default_rng(p2.TARGET_SEED)
-    targets = np.sort(rng.choice(rc, p2.TARGETS, replace=False))
+    candidates_rc = rc
+    excluded_seed = getattr(cfg, "EXCLUDED_TARGET_SEED", None)
+    if excluded_seed is not None:  # targets of an earlier version, drawn the same way
+        earlier = np.random.default_rng(excluded_seed).choice(rc, cfg.TARGETS, replace=False)
+        candidates_rc = np.setdiff1d(rc, earlier)
+    rng = np.random.default_rng(cfg.TARGET_SEED)
+    targets = np.sort(rng.choice(candidates_rc, cfg.TARGETS, replace=False))
     is_target = np.isin(rc, targets)
     _, _, _, top1 = provenance.knn_both(
         x_eval[pos[targets]], x_train, y_train, k=protocol.KNN_K, groups=None
@@ -232,17 +240,17 @@ def run() -> dict:
     record(("clean", 0.0, 0), scores(feats))
 
     detection = {}
-    scenarios = [("dup", r, m) for r in p2.NOISE for m in p2.COPIES if m > 0]
-    scenarios += [("mislabel", 0.0, m) for m in p2.MISLABEL_COPIES]
+    scenarios = [("dup", r, m) for r in cfg.NOISE for m in cfg.COPIES if m > 0]
+    scenarios += [("mislabel", 0.0, m) for m in cfg.MISLABEL_COPIES]
     src_texts = fr["text"].iloc[train_idx[sources]].tolist()
     copies_by_rate: dict[float, Copies] = {}
-    wrong = np.random.default_rng(p2.MISLABEL_SEED).integers(0, len(train_idx), len(sources))
+    wrong = np.random.default_rng(cfg.MISLABEL_SEED).integers(0, len(train_idx), len(sources))
 
     for kind_s, rate, m in scenarios:
         with timer.stage(f"{kind_s}_noise{rate}_m{m}"):
             if rate not in copies_by_rate:
                 copies_by_rate[rate] = make_copies(
-                    sources, src_texts, x_train, tf, rate=rate, n_jobs=n_jobs
+                    sources, src_texts, x_train, tf, rate=rate, n_jobs=n_jobs, cfg=cfg
                 )
                 c = copies_by_rate[rate]
                 detection[str(rate)] = {
@@ -286,10 +294,17 @@ def run() -> dict:
 
     with timer.stage("bootstrap"):
         results = _summarise(
-            stats, is_target, clean, fitted, detection=detection, sources=sources, targets=targets
+            stats,
+            is_target,
+            clean,
+            fitted,
+            detection=detection,
+            sources=sources,
+            targets=targets,
+            cfg=cfg,
         )
     results["cost"] = {"stages_s": timer.stages}
-    (paths.REPORTS / "h2_results.json").write_bytes(
+    (paths.REPORTS / getattr(cfg, "RESULTS_FILE", "h2_results.json")).write_bytes(
         orjson.dumps(results, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
     )
     print(orjson.dumps(results["decision"], option=orjson.OPT_INDENT_2).decode())
@@ -300,8 +315,10 @@ def _vstack(a, b):
     return sp.vstack([a, b], format="csr")
 
 
-def _cached_clean(build):
-    path = paths.CACHE / "preds" / f"h2_clean_k{protocol.KNN_K}_c{p2.KNN_CANDIDATES}.joblib"
+def _cached_clean(build, *, cfg):
+    adaptive = "_adaptive" if getattr(cfg, "ADAPTIVE_CANDIDATES", False) else ""
+    name = f"h2_clean_k{protocol.KNN_K}_c{cfg.KNN_CANDIDATES}{adaptive}.joblib"
+    path = paths.CACHE / "preds" / name
     if path.exists():
         return joblib.load(path)
     value = build()
@@ -309,10 +326,10 @@ def _cached_clean(build):
     return value
 
 
-def _summarise(stats, is_target, clean, fitted, *, detection, sources, targets) -> dict:
-    rng = np.random.default_rng(p2.BOOTSTRAP_SEED)
+def _summarise(stats, is_target, clean, fitted, *, detection, sources, targets, cfg) -> dict:
+    rng = np.random.default_rng(cfg.BOOTSTRAP_SEED)
     t_idx = np.flatnonzero(is_target)
-    boots = [rng.integers(0, len(t_idx), len(t_idx)) for _ in range(p2.BOOTSTRAP_RESAMPLES)]
+    boots = [rng.integers(0, len(t_idx), len(t_idx)) for _ in range(cfg.BOOTSTRAP_RESAMPLES)]
     base_key = ("clean", 0.0, 0)
 
     def ci(values: list[float]) -> list[float]:
@@ -342,12 +359,12 @@ def _summarise(stats, is_target, clean, fitted, *, detection, sources, targets) 
                     "auto_recall_targets": round(_auto_recall(tgt), 4),
                     "applied_targets": int(tgt[:, 0].sum()),
                 }
-                if a == p2.ALPHA:
+                if a == cfg.ALPHA:
                     row["risk_targets_ci95"] = ci([_risk(tgt[b]) for b in boots])
                     row["risk_change_ci95"] = ci([_risk(tgt[b]) - _risk(base[b]) for b in boots])
                 table.append(row)
 
-    def find(kind, rate, m, name, a=p2.ALPHA):
+    def find(kind, rate, m, name, a=cfg.ALPHA):
         return next(
             r
             for r in table
@@ -355,16 +372,16 @@ def _summarise(stats, is_target, clean, fitted, *, detection, sources, targets) 
             == (kind, rate, m, name, a)
         )
 
-    m_max = max(p2.COPIES)
+    m_max = max(cfg.COPIES)
     c1 = find("dup", 0.0, m_max, "C1_strong+knn")
     c1p = find("dup", 0.0, m_max, "C1p_strong+knn_prov")
-    ar_c1 = clean["C1_strong+knn"][str(p2.ALPHA)]["auto_recall"]
-    ar_c1p = clean["C1p_strong+knn_prov"][str(p2.ALPHA)]["auto_recall"]
+    ar_c1 = clean["C1_strong+knn"][str(cfg.ALPHA)]["auto_recall"]
+    ar_c1p = clean["C1p_strong+knn_prov"][str(cfg.ALPHA)]["auto_recall"]
     decision: dict[str, Any] = {
         "H2a_vulnerability": {
             "C1_risk_targets": c1["risk_targets"],
             "ci95": c1["risk_targets_ci95"],
-            "met": bool(c1["risk_targets_ci95"][0] > p2.ALPHA),
+            "met": bool(c1["risk_targets_ci95"][0] > cfg.ALPHA),
         },
         "H2b_invariance": {
             "C1p_risk_change": round(
@@ -372,18 +389,26 @@ def _summarise(stats, is_target, clean, fitted, *, detection, sources, targets) 
                 4,
             ),
             "ci95": c1p["risk_change_ci95"],
-            "met": bool(c1p["risk_change_ci95"][1] <= p2.INVARIANCE_MARGIN),
+            "met": bool(c1p["risk_change_ci95"][1] <= cfg.INVARIANCE_MARGIN),
         },
         "H2c_cost": {
             "auto_recall_C1": round(ar_c1, 4),
             "auto_recall_C1p": round(ar_c1p, 4),
             "diff": round(ar_c1p - ar_c1, 4),
-            "met": bool(ar_c1p - ar_c1 >= -p2.COST_MARGIN),
+            "met": bool(ar_c1p - ar_c1 >= -cfg.COST_MARGIN),
         },
     }
     decision["H2_supported"] = all(v["met"] for v in decision.values())
+    if getattr(cfg, "PROTOCOL_VERSION", "") == "2.1":
+        g1 = find("dup", 0.0, m_max, "G1_strong+graph")
+        g1_base = find("clean", 0.0, 0, "G1_strong+graph")
+        decision["H2d_graph_robustness"] = {
+            "G1_risk_change": round(g1["risk_targets"] - g1_base["risk_targets"], 4),
+            "ci95": g1["risk_change_ci95"],
+            "met": bool(g1["risk_change_ci95"][1] <= cfg.INVARIANCE_MARGIN),
+        }
     return {
-        "protocol": p2.PROTOCOL_VERSION,
+        "protocol": cfg.PROTOCOL_VERSION,
         "targets": len(targets),
         "distinct_sources": len(sources),
         "certified_tau": {n: {str(a): t for a, t in f.tau.items()} for n, f in fitted.items()},

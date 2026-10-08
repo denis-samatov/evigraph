@@ -93,3 +93,26 @@ def test_provenance_hub_cap_counts_groups_not_copies() -> None:
     prov = provenance.graph_features(celex, is_pool, y, edges, groups=groups, hub_cap=3)
     assert naive.degree["hub"][3] == 0  # hub dropped: over the cap in documents
     assert prov.degree["hub"][3] == 2  # groups of a and c, each counted once
+
+
+def test_adaptive_window_keeps_invariance_when_copies_flood_the_candidates() -> None:
+    rng = np.random.default_rng(7)
+    x, y = _pool(rng, 120, 60, 7)
+    q = x[:3]
+    groups = np.arange(120)
+    near = np.argsort(-(q @ x.T).toarray(), axis=1)[:, :3].ravel()
+    srcs = np.unique(near)
+    m = 30  # 3 sources x 30 copies > candidate window of 40
+    x2 = sp.vstack([x, *[sp.vstack([x[s]] * m) for s in srcs]]).tocsr()
+    y2 = np.vstack([y, *[np.repeat(y[s : s + 1], m, axis=0) for s in srcs]])
+    g2 = np.concatenate([groups, *[np.full(m, groups[s]) for s in srcs]])
+
+    def prov(xp, yp, gp, adaptive):
+        _, p, _, _ = provenance.knn_both(
+            q, xp, yp, k=10, groups=gp, candidates=40, adaptive=adaptive
+        )
+        return p
+
+    before = prov(x, y, groups, adaptive=True)
+    np.testing.assert_allclose(prov(x2, y2, g2, adaptive=True), before, atol=1e-6)
+    assert not np.allclose(prov(x2, y2, g2, adaptive=False), before)

@@ -71,11 +71,12 @@ def compare() -> None:
 
 
 @app.command()
-def h2() -> None:
-    """Protocol 2.0: certified tagging under source duplication."""
+def h2(version: str = "2.1") -> None:
+    """Protocol 2.x: certified tagging under source duplication (--version 2.0 or 2.1)."""
     from evigraph_research import h2 as mod
+    from evigraph_research import protocol_v2, protocol_v21
 
-    mod.run()
+    mod.run({"2.0": protocol_v2, "2.1": protocol_v21}[version])
 
 
 def main() -> None:

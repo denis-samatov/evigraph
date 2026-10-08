@@ -42,6 +42,7 @@ def knn_scores(
     k: int,
     groups: np.ndarray | None = None,
     candidates: int = 200,
+    adaptive: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """kNN label vote, max similarity and top-1 pool index for each query row.
 
@@ -49,7 +50,7 @@ def knn_scores(
     top-k provenance groups among the `candidates` nearest documents.
     """
     naive, prov, top, top1 = knn_both(
-        x_query, x_pool, y_pool, k=k, groups=groups, candidates=candidates
+        x_query, x_pool, y_pool, k=k, groups=groups, candidates=candidates, adaptive=adaptive
     )
     return (naive if prov is None else prov), top, top1
 
@@ -62,8 +63,14 @@ def knn_both(
     k: int,
     groups: np.ndarray | None,
     candidates: int = 200,
+    adaptive: bool = False,
 ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray, np.ndarray]:
-    """Naive and (if `groups` is given) provenance-aware votes from one similarity pass."""
+    """Naive and (if `groups` is given) provenance-aware votes from one similarity pass.
+
+    With `adaptive`, a row whose candidate window holds fewer than k distinct groups widens
+    the window (x4) until it does or covers the whole pool; otherwise copies of a few nearby
+    sources can crowd every other group out of a fixed window.
+    """
     xt = x_pool.T.tocsr()
     n_q, n_lab = x_query.shape[0], y_pool.shape[1]
     naive = np.zeros((n_q, n_lab), dtype=np.float32)
@@ -89,10 +96,16 @@ def knn_both(
         cand = np.argpartition(-sim, c, axis=1)[:, :c]
         for r in range(sim.shape[0]):
             idx = cand[r]
-            s = sim[r, idx]
-            order = np.argsort(-s, kind="stable")
-            g_sorted, s_sorted = codes[idx][order], s[order]
-            _, first = np.unique(g_sorted, return_index=True)  # best member of each group
+            width = c
+            while True:
+                s = sim[r, idx]
+                order = np.argsort(-s, kind="stable")
+                g_sorted, s_sorted = codes[idx][order], s[order]
+                _, first = np.unique(g_sorted, return_index=True)  # best member of each group
+                if not adaptive or len(first) >= k or width >= sim.shape[1] - 1:
+                    break
+                width = min(width * 4, sim.shape[1] - 1)
+                idx = np.argpartition(-sim[r], width)[:width]
             first.sort()
             best = first[:k]
             wg = s_sorted[best]
