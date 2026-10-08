@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     min_positives_for_text_model: int = 5
     stacker_folds: int = 5
 
+    # Certification and monitoring
+    cert_grid_min_applied: int = 50  # strictest threshold applies this many out-of-fold pairs
+    cert_grid_ratio: float = 1.1
+    audit_rate: float = 0.1  # share of auto-applied tags sent to expert audit
+    min_audit: int = 30  # audited tags needed before monitoring can suspend a certification
+
 
 @lru_cache
 def get_settings() -> Settings:

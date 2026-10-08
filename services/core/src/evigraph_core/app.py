@@ -4,8 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from evigraph_core import catalogs, releases, reviews
+from evigraph_core import catalogs, certification, releases, reviews
 from evigraph_core.api.routes_base import router as base_router
+from evigraph_core.api.routes_certification import router as certification_router
 from evigraph_core.api.routes_engine import router as engine_router
 from evigraph_core.api.routes_review import router as review_router
 from evigraph_core.db import get_engine, session_factory
@@ -38,6 +39,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def _release(_: Request, exc: releases.ReleaseError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
+    @app.exception_handler(certification.CertificationError)
+    def _certification(_: Request, exc: certification.CertificationError) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
     @app.exception_handler(IntegrityError)
     def _integrity(_: Request, exc: IntegrityError) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": "conflict with existing data"})
@@ -45,4 +50,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(base_router)
     app.include_router(review_router)
     app.include_router(engine_router)
+    app.include_router(certification_router)
     return app

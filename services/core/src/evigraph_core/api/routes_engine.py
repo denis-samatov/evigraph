@@ -40,6 +40,7 @@ class SuggestionOut(Strict):
     score: float
     rank: int
     state: str
+    decision: str
     revision: int
     evidence: list[EvidenceOut]
 
@@ -47,6 +48,7 @@ class SuggestionOut(Strict):
 class SuggestionsOut(Strict):
     release_id: uuid.UUID
     release_kind: str
+    certification_id: uuid.UUID | None
     suggestions: list[SuggestionOut]
 
 
@@ -71,16 +73,20 @@ def list_releases(version_id: uuid.UUID, session: SessionDep):
 
 
 @router.post("/document-versions/{version_id}/suggestions", response_model=SuggestionsOut)
-def suggest(version_id: uuid.UUID, body: SuggestIn, session: SessionDep) -> SuggestionsOut:
-    release, items = releases.suggest(
+def suggest(
+    version_id: uuid.UUID, body: SuggestIn, session: SessionDep, settings: SettingsDep
+) -> SuggestionsOut:
+    release, cert, items = releases.suggest(
         session,
         document_version_id=version_id,
         catalog_version_id=body.catalog_version_id,
         top_k=body.top_k,
+        settings=settings,
     )
     return SuggestionsOut(
         release_id=release.id,
         release_kind=release.manifest["kind"],
+        certification_id=cert.id if cert is not None else None,
         suggestions=[
             SuggestionOut(
                 assertion_id=s.assertion.id,
@@ -90,6 +96,7 @@ def suggest(version_id: uuid.UUID, body: SuggestIn, session: SessionDep) -> Sugg
                 score=round(s.score, 4),
                 rank=s.rank,
                 state=s.assertion.state.value,
+                decision=s.decision,
                 revision=s.assertion.revision,
                 evidence=[EvidenceOut(**e) for e in s.evidence],
             )

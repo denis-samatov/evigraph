@@ -25,8 +25,11 @@ from evigraph_core.models import (
     Assertion,
     AssertionState,
     Assessment,
+    AuditSample,
     Catalog,
     CatalogVersion,
+    CertificationRecord,
+    CertificationStatus,
     Concept,
     DocumentVersion,
     Release,
@@ -149,7 +152,7 @@ def train(session: Session, catalog_version_id: uuid.UUID, settings: Settings) -
 
 
 @lru_cache(maxsize=8)
-def _load(artifact_uri: str) -> dict:
+def load(artifact_uri: str) -> dict:
     return joblib.load(artifact_uri)
 
 
@@ -165,6 +168,21 @@ def active_release(session: Session, catalog_version_id: uuid.UUID) -> Release:
     return release
 
 
+def audited(assertion_id: uuid.UUID, rate: float) -> bool:
+    """Deterministic audit draw for an auto-applied assertion."""
+    digest = hashlib.sha256(f"audit:{assertion_id}".encode()).digest()
+    return int.from_bytes(digest[:8], "big") / 2**64 < rate
+
+
+def certification_for(session: Session, release: Release) -> CertificationRecord | None:
+    return session.scalar(
+        select(CertificationRecord).where(
+            CertificationRecord.release_id == release.id,
+            CertificationRecord.status == CertificationStatus.active,
+        )
+    )
+
+
 @dataclass
 class Suggestion:
     assertion: Assertion
@@ -172,6 +190,7 @@ class Suggestion:
     score: float
     rank: int
     evidence: list[dict]
+    decision: str  # "auto_applied" or "needs_review" (for the score under the active policy)
 
 
 def suggest(
@@ -180,13 +199,14 @@ def suggest(
     document_version_id: uuid.UUID,
     catalog_version_id: uuid.UUID,
     top_k: int,
-) -> tuple[Release, list[Suggestion]]:
+    settings: Settings,
+) -> tuple[Release, CertificationRecord | None, list[Suggestion]]:
     version = session.get(DocumentVersion, document_version_id)
     if version is None:
         msg = f"document version {document_version_id} not found"
         raise ReleaseError(msg)
     release = active_release(session, catalog_version_id)
-    bundle = _load(release.artifact_uri)
+    bundle = load(release.artifact_uri)
     concepts = {
         c.id: c
         for c in session.scalars(
@@ -198,7 +218,10 @@ def suggest(
     own = pool_ids.index(str(version.id)) if str(version.id) in pool_ids else None
     scored = bundle["engine"].score([version.canonical_text], exclude=[own])
     scores = scored.scores[0]
-    ranking = np.argsort(-scores, kind="stable")[:top_k]
+    cert = certification_for(session, release)
+    ranking = list(np.argsort(-scores, kind="stable")[:top_k])
+    if cert is not None and cert.tau is not None:  # every concept above tau is auto-applied
+        ranking += [j for j in np.argsort(-scores, kind="stable")[top_k:] if scores[j] >= cert.tau]
 
     existing = {
         a.concept_id: a
@@ -209,16 +232,19 @@ def suggest(
     out = []
     for rank, j in enumerate(ranking, start=1):
         concept = order[j]
+        auto = cert is not None and cert.tau is not None and scores[j] >= cert.tau
         assertion = existing.get(concept.id)
         if assertion is None:
             assertion = Assertion(
                 document_version_id=version.id,
                 concept_id=concept.id,
-                state=AssertionState.proposed,
+                state=AssertionState.auto_applied if auto else AssertionState.proposed,
                 revision=1,
             )
             session.add(assertion)
             session.flush()
+            if auto and cert is not None and audited(assertion.id, settings.audit_rate):
+                session.add(AuditSample(assertion_id=assertion.id, certification_id=cert.id))
         evidence = [
             {
                 "document_version_id": pool_ids[e.pool_index],
@@ -242,6 +268,7 @@ def suggest(
                     evidence={"supporting": evidence},
                 )
             )
-        out.append(Suggestion(assertion, concept, float(scores[j]), rank, evidence))
+        decision = "auto_applied" if auto else "needs_review"
+        out.append(Suggestion(assertion, concept, float(scores[j]), rank, evidence, decision))
     session.flush()
-    return release, out
+    return release, cert, out

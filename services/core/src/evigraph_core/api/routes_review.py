@@ -5,11 +5,12 @@ from typing import Literal
 
 from fastapi import APIRouter
 from pydantic import Field
+from sqlalchemy import select
 
-from evigraph_core import reviews
-from evigraph_core.api.deps import SessionDep
+from evigraph_core import certification, reviews
+from evigraph_core.api.deps import SessionDep, SettingsDep
 from evigraph_core.api.schemas import Out, Strict, UUIDIn
-from evigraph_core.models import ReviewKind
+from evigraph_core.models import AuditSample, ReviewKind
 
 router = APIRouter()
 
@@ -65,18 +66,22 @@ def _out(result: reviews.ReviewResult) -> ReviewOut:
 
 
 @router.post("/assertions/{assertion_id}/review", response_model=ReviewOut)
-def review_assertion(assertion_id: uuid.UUID, body: ReviewIn, session: SessionDep) -> ReviewOut:
-    return _out(
-        reviews.review(
-            session,
-            assertion_id=assertion_id,
-            kind=ReviewKind(body.kind),
-            reviewer=body.reviewer,
-            expected_revision=body.expected_revision,
-            idempotency_key=body.idempotency_key,
-            comment=body.comment,
-        )
+def review_assertion(
+    assertion_id: uuid.UUID, body: ReviewIn, session: SessionDep, settings: SettingsDep
+) -> ReviewOut:
+    result = reviews.review(
+        session,
+        assertion_id=assertion_id,
+        kind=ReviewKind(body.kind),
+        reviewer=body.reviewer,
+        expected_revision=body.expected_revision,
+        idempotency_key=body.idempotency_key,
+        comment=body.comment,
     )
+    audit = session.scalar(select(AuditSample).where(AuditSample.assertion_id == assertion_id))
+    if audit is not None:  # an audited auto-applied tag was reviewed: re-check the guarantee
+        certification.evaluate(session, audit.certification_id, settings)
+    return _out(result)
 
 
 @router.post(

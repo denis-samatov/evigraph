@@ -226,3 +226,39 @@ class ReviewCompletion(Timestamped, Base):
     catalog_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("catalog_versions.id"))
     reviewer: Mapped[str] = mapped_column(String(200))
     idempotency_key: Mapped[str] = mapped_column(String(200), unique=True)
+
+
+class CertificationStatus(enum.StrEnum):
+    active = "active"  # auto-apply enabled for the release
+    failed = "failed"  # no threshold could be certified
+    superseded = "superseded"  # replaced by a newer certification
+    suspended = "suspended"  # monitoring found evidence that realised risk exceeds alpha
+
+
+class CertificationRecord(Timestamped, Base):
+    """Learn-then-Test certification of a release's threshold on held-out reviewed data."""
+
+    __tablename__ = "certifications"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    release_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("releases.id"))
+    catalog_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("catalog_versions.id"))
+    alpha: Mapped[float] = mapped_column(Float)
+    delta: Mapped[float] = mapped_column(Float)
+    tau: Mapped[float | None] = mapped_column(Float)
+    status: Mapped[CertificationStatus] = mapped_column(_enum(CertificationStatus))
+    cert_documents: Mapped[int] = mapped_column(Integer)
+    n_applied: Mapped[int] = mapped_column(Integer)
+    n_errors: Mapped[int] = mapped_column(Integer)
+    ucb: Mapped[float] = mapped_column(Float)
+    auto_recall: Mapped[float] = mapped_column(Float)
+    details: Mapped[dict] = mapped_column(JSON)
+    status_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class AuditSample(Timestamped, Base):
+    """An auto-applied assertion drawn for expert audit under a certification."""
+
+    __tablename__ = "audit_samples"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    assertion_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("assertions.id"), unique=True)
+    certification_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("certifications.id"))
