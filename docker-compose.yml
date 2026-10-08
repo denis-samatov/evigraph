@@ -1,4 +1,5 @@
 # EviGraph Core with PostgreSQL. `docker compose up --build`, then http://localhost:8000/docs
+# (set EVIGRAPH_PORT to use another host port)
 services:
   db:
     image: pgvector/pgvector:pg17
@@ -18,7 +19,7 @@ services:
     environment:
       EVIGRAPH_DATABASE_URL: postgresql+psycopg://evigraph:evigraph@db:5432/evigraph
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${EVIGRAPH_PORT:-8000}:8000"
     volumes:
       - artifacts:/data/artifacts
     depends_on:

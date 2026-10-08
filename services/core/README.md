@@ -46,7 +46,8 @@ uv run evigraph-core serve                    # http://127.0.0.1:8000/docs
 uv run pytest -q                              # tests run on a throw-away database
 ```
 
-Or with Docker, from the repository root: `docker compose up --build`.
+Or with Docker, from the repository root: `docker compose up --build` (set `EVIGRAPH_PORT` if
+port 8000 is taken).
 
 Configuration is read from `EVIGRAPH_*` environment variables (see `settings.py`), e.g.
 `EVIGRAPH_DATABASE_URL`, `EVIGRAPH_ARTIFACT_DIR`, `EVIGRAPH_AUDIT_RATE`.

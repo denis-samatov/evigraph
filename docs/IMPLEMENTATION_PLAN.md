@@ -32,7 +32,7 @@ interface (S3 later). Package: `services/core`.
 | M4 | Review commands: accept, reject, add, withdraw; optimistic concurrency (`expected_revision`) and idempotency keys; review queue | concurrent conflicting reviews are rejected; replays are idempotent | done |
 | M5 | Certification: dataset from fully reviewed documents, provenance-group split, LTT per catalog, certification records, sample-size planner; auto-apply only with an active certification | auto-apply refused without certification; planner matches the binomial bound | done |
 | M6 | Monitoring: audit sampling of auto-applied tags, confidence bounds on the realised risk, automatic suspension when the lower bound exceeds α | an audit stream with risk above α suspends auto-apply (test) | done — no provenance-flood alarm: the kNN pool is frozen inside a release and every retrained release needs a new certification, so post-certification copies cannot change a certified model |
-| M7 | Deployment: Docker Compose (API, PostgreSQL), demo on MultiEURLEX | `docker compose up` serves the demo catalog | in progress |
+| M7 | Deployment: Docker Compose (API, PostgreSQL), demo on MultiEURLEX | `docker compose up` serves the API with migrations applied | done (verified: migrations, health, project and document creation) |
 
 **Demo on real data (M7).** `evigraph-core demo-multieurlex` on 2,000 reviewed MultiEURLEX
 documents certifies τ = 0.906 at α = 10% (upper bound 8.5%) and, on 200 later documents,
