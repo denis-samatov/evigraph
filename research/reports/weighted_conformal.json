@@ -1,0 +1,168 @@
+{
+  "alpha": 0.1,
+  "delta": 0.1,
+  "tau_clean": 0.7968205213546753,
+  "scenarios": [
+    {
+      "copies": 0,
+      "weights": {
+        "shift_detector_auc": 0.4996,
+        "max": 1.0,
+        "kish_n_eff_docs": 2659.0
+      },
+      "clean_tau": {
+        "tau": 0.7968205213546753,
+        "risk": 0.0826,
+        "auto_recall": 0.5595,
+        "applied": 1562
+      },
+      "weighted_recert": {
+        "tau": 0.7968205213546753,
+        "tested": [
+          {
+            "tau": 0.7968205213546753,
+            "n_eff": 8119.0,
+            "rate": 0.0865,
+            "ucb": 0.0906
+          },
+          {
+            "tau": 0.685838520526886,
+            "n_eff": 8927.0,
+            "rate": 0.1126,
+            "ucb": 0.117
+          }
+        ],
+        "risk": 0.0826,
+        "auto_recall": 0.5595,
+        "applied": 1562
+      },
+      "oracle_recert_with_new_labels": {
+        "tau": 0.7968205213546753,
+        "risk": 0.0826,
+        "auto_recall": 0.5595,
+        "applied": 1562
+      }
+    },
+    {
+      "copies": 10,
+      "weights": {
+        "shift_detector_auc": 0.8926,
+        "max": 9.93,
+        "kish_n_eff_docs": 1086.9
+      },
+      "clean_tau": {
+        "tau": 0.7968205213546753,
+        "risk": 0.1155,
+        "auto_recall": 0.5709,
+        "applied": 1653
+      },
+      "weighted_recert": {
+        "tau": 0.8695535063743591,
+        "tested": [
+          {
+            "tau": 0.8695535063743591,
+            "n_eff": 2761.1,
+            "rate": 0.0867,
+            "ucb": 0.0938
+          },
+          {
+            "tau": 0.7968205213546753,
+            "n_eff": 3110.9,
+            "rate": 0.1001,
+            "ucb": 0.1072
+          }
+        ],
+        "risk": 0.091,
+        "auto_recall": 0.5346,
+        "applied": 1506
+      },
+      "oracle_recert_with_new_labels": {
+        "tau": 0.8695535063743591,
+        "risk": 0.091,
+        "auto_recall": 0.5346,
+        "applied": 1506
+      }
+    },
+    {
+      "copies": 30,
+      "weights": {
+        "shift_detector_auc": 0.9135,
+        "max": 13.19,
+        "kish_n_eff_docs": 1060.7
+      },
+      "clean_tau": {
+        "tau": 0.7968205213546753,
+        "risk": 0.1631,
+        "auto_recall": 0.5951,
+        "applied": 1821
+      },
+      "weighted_recert": {
+        "tau": 0.8695535063743591,
+        "tested": [
+          {
+            "tau": 0.8695535063743591,
+            "n_eff": 2653.8,
+            "rate": 0.0858,
+            "ucb": 0.0933
+          },
+          {
+            "tau": 0.7968205213546753,
+            "n_eff": 2996.7,
+            "rate": 0.1003,
+            "ucb": 0.1075
+          }
+        ],
+        "risk": 0.1234,
+        "auto_recall": 0.5517,
+        "applied": 1612
+      },
+      "oracle_recert_with_new_labels": {
+        "tau": 0.9077650904655457,
+        "risk": 0.1034,
+        "auto_recall": 0.5248,
+        "applied": 1499
+      }
+    },
+    {
+      "copies": 100,
+      "weights": {
+        "shift_detector_auc": 0.9133,
+        "max": 13.57,
+        "kish_n_eff_docs": 1080.6
+      },
+      "clean_tau": {
+        "tau": 0.7968205213546753,
+        "risk": 0.1631,
+        "auto_recall": 0.5951,
+        "applied": 1821
+      },
+      "weighted_recert": {
+        "tau": 0.8695535063743591,
+        "tested": [
+          {
+            "tau": 0.8695535063743591,
+            "n_eff": 2694.9,
+            "rate": 0.0855,
+            "ucb": 0.093
+          },
+          {
+            "tau": 0.7968205213546753,
+            "n_eff": 3033.9,
+            "rate": 0.1002,
+            "ucb": 0.1075
+          }
+        ],
+        "risk": 0.1234,
+        "auto_recall": 0.5517,
+        "applied": 1612
+      },
+      "oracle_recert_with_new_labels": {
+        "tau": 0.9077650904655457,
+        "risk": 0.1034,
+        "auto_recall": 0.5248,
+        "applied": 1499
+      }
+    }
+  ],
+  "seconds": 118
+}
