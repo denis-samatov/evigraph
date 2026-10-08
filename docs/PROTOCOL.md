@@ -1,82 +1,84 @@
-# Протокол оценки EviGraph, версия 1.0
+# EviGraph evaluation protocol
 
-Заморожен 2026-10-07. Код читает все параметры из
+Version 1.0 frozen on 2026-10-07. Code reads every parameter from
 [`research/src/evigraph_research/protocol.py`](../research/src/evigraph_research/protocol.py);
-изменение любого параметра — это новая версия протокола с записью в разделе «История».
+changing any parameter is a new protocol version recorded under "History".
 
-## 1. Статус данных перед заморозкой
+# Part 1. Protocol 1.0: does the citation graph add accuracy beyond text? (H1)
 
-Версия 0 (исследовательский задел, коммит `a6467f6`) использовала `risk_cert` при отладке
-процедуры сертификации: две ошибки — сертификация на изотонических плато и слишком грубая
-сетка порогов — найдены по результатам на `risk_cert`. Поэтому:
+## 1. Data status before the freeze
 
-* результаты версии 0 на `risk_cert` считаются исследовательскими;
-* с версии 1.0 `risk_cert` используется только для сертификации систем из раздела 6, без
-  выбора между ними и без изменения процедуры;
-* основной результат для статьи считается на `final_test` один раз, после заморозки итоговой
-  системы.
+Version 0 (the research spike, commit `a6467f6`) used `risk_cert` while debugging the
+certification procedure: two errors — certifying on isotonic plateaus and a threshold grid
+that was too coarse — were found from results on `risk_cert`. Therefore:
 
-## 2. Данные и разбиение
+* version 0 results on `risk_cert` are exploratory;
+* from version 1.0 on, `risk_cert` is used only to certify the systems of section 6, without
+  choosing between them and without changing the procedure;
+* the main result for the paper is computed once on `final_test`, after the final system is
+  frozen.
 
-| Параметр | Значение |
+## 2. Data and splits
+
+| Parameter | Value |
 |---|---|
-| Корпус | MultiEURLEX, английская часть, EuroVoc `level_2`, 127 понятий |
-| Архив | `coastalcph/multi_eurlex`, sha256 `3a2195bc…e83` |
-| Манифест разбиения | sha256 `b36fef1d2a5cb410873173f74ee40d7da7359ecd62ebfbd4c4fc01423fef6b01` |
-| Seed разбиения | 20261007 |
+| Corpus | MultiEURLEX, English, EuroVoc `level_2`, 127 concepts |
+| Archive | `coastalcph/multi_eurlex`, sha256 `3a2195bc…e83` |
+| Split manifest | sha256 `b36fef1d2a5cb410873173f74ee40d7da7359ecd62ebfbd4c4fc01423fef6b01` |
+| Split seed | 20261007 |
 
-| Часть | Разрешено |
+| Split | Allowed use |
 |---|---|
-| `train` | обучение моделей; источник меток опорного графа |
-| `train` → ранняя остановка | последние 5% групп `train` по дате; только выбор эпохи нейросетевых моделей |
-| `model_dev` | выбор признаков и гиперпараметров; обучение стекеров (2 фолда по группам, seed 1) |
-| `calib_fit` | калибратор; сетка порогов |
-| `risk_cert` | сертификация систем раздела 6 |
-| `final_test` | один раз, после заморозки; доступ только через `protocol.open_final_test`, каждое открытие пишется в `reports/final_test_access.log` |
+| `train` | model fitting; the only source of labels in the reference graph |
+| `train` → early stopping | latest 5% of `train` groups by date; only to pick the epoch of neural models |
+| `model_dev` | feature and hyper-parameter choice; stacker fitting (2 folds by split group, seed 1) |
+| `calib_fit` | calibrator; threshold grid |
+| `risk_cert` | certification of the systems in section 6 |
+| `final_test` | once, after the freeze; only through `protocol.open_final_test`, every opening is logged to `reports/final_test_access.log` |
 
-Во входе моделей только текст. Свойства Cellar `work_is_about_concept_eurovoc`,
-`resource_legal_is_about_subject-matter`, `resource_legal_is_about_concept_directory-code`
-в признаки не попадают.
+Model inputs are text only. The Cellar properties `work_is_about_concept_eurovoc`,
+`resource_legal_is_about_subject-matter` and `resource_legal_is_about_concept_directory-code`
+never enter the features.
 
-## 3. Опорный граф
+## 3. Reference graph
 
-* Метки соседей берутся только из `train`; собственные метки документа не участвуют.
-* Соседи — документы, связанные с данным напрямую любым типом связи (в любом направлении)
-  или через общий внешний акт, в который ведут от 2 до 500 документов корпуса.
-* Сосед опубликован строго раньше документа.
-* Графовые признаки: среднее векторов меток соседей по типам `cites`, `amends`, `repeals`,
-  `based_on`, `other`, `hub` и флаги наличия соседей каждого типа.
+* Neighbour labels come from `train` only; a document's own labels never take part.
+* Neighbours are documents linked to the document directly by any relation (in either
+  direction) or through a shared external act that 2 to 500 corpus documents point to.
+* A neighbour is published strictly before the document.
+* Graph features: mean label vector of neighbours per relation type (`cites`, `amends`,
+  `repeals`, `based_on`, `other`, `hub`) and a flag for the presence of each type.
 
-## 4. Контроли «те же материалы без графа»
+## 4. Controls: the same materials without the graph
 
-| Контроль | Что видит | Чего не видит |
+| Control | Sees | Does not see |
 |---|---|---|
-| C1 `knn` | метки 20 ближайших документов `train` по косинусу TF-IDF и максимальное сходство | связи EUR-Lex |
-| C2 `nbtext` | текст документа и средний TF-IDF его графовых соседей (тот же набор, что в разделе 3), усечённый до 1 000 самых весомых термов и нормированный | метки соседей и типы связей |
+| C1 `knn` | labels of the 20 nearest `train` documents by TF-IDF cosine, and the maximum similarity | EUR-Lex relations |
+| C2 `nbtext` | the document's text and the mean TF-IDF of its graph neighbours (the set of section 3), truncated to its 1,000 heaviest terms and normalised | neighbour labels and relation types |
 
-C2 обучается так же, как текстовая модель (TF-IDF + SGD), на `train`, где у каждого документа
-свои более ранние соседи из `train`.
+C2 is trained like the text model (TF-IDF + SGD) on `train`, where every document has its own
+earlier neighbours from `train`.
 
-## 5. Сильная текстовая модель
+## 5. Strong text model
 
-| Параметр | Значение |
+| Parameter | Value |
 |---|---|
-| Модель | `nlpaueb/legal-bert-base-uncased`, ревизия `15b570cb…`, 110 млн параметров |
-| Гиперпараметры | 4 эпохи, lr 3·10⁻⁵, батч 16, weight decay 0,01 |
-| Вход | первые 512 word pieces канонического текста |
-| Обучение | BCE, AdamW, линейный warmup 10%, clip 1,0, seed 0 |
-| Выбор эпохи | лучшая mRP на подмножестве ранней остановки из `train` |
+| Model | `nlpaueb/legal-bert-base-uncased`, revision `15b570cb…`, 110M parameters |
+| Hyper-parameters | 4 epochs, lr 3·10⁻⁵, batch 16, weight decay 0.01 |
+| Input | first 512 word pieces of the canonical text |
+| Training | BCE, AdamW, 10% linear warm-up, gradient clip 1.0, seed 0 |
+| Epoch selection | best mRP on the early-stopping subset of `train` |
 
-Известное ограничение: LEGAL-BERT предобучен (MLM, без меток) на законодательстве из EUR-Lex,
-куда входят тексты всех частей разбиения, включая `final_test`. Утечки меток нет, но
-модель видела тексты. В статье это указывается явно.
+Known limitation: LEGAL-BERT was pre-trained (MLM, no labels) on EU legislation from EUR-Lex,
+which includes the texts of all splits, `final_test` among them. There is no label leakage, but
+the model has seen the texts. The paper states this explicitly.
 
-## 6. Зарегистрированные системы
+## 6. Registered systems
 
-Все системы — один и тот же стекер: логистическая регрессия на парах «документ, понятие»
-с признаком `logit(prior)` и блоками ниже.
+Every system is the same stacker: logistic regression over (document, concept) pairs with a
+`logit(prior)` feature and the blocks below.
 
-| Система | Блоки признаков |
+| System | Feature blocks |
 |---|---|
 | T0_tfidf | `p_tfidf` |
 | T1_strong | `p_strong` |
@@ -85,127 +87,126 @@ C2 обучается так же, как текстовая модель (TF-ID
 | G1_strong+graph | `p_strong`, `graph` |
 | G2_strong+knn+nbtext+graph | `p_strong`, `knn`, `p_nbtext`, `graph` |
 
-## 7. Сертификация
+## 7. Certification
 
-* Политика: назначить пару автоматически, если сырая оценка стекера ≥ τ.
-* Сетка τ по `calib_fit`: k-й порог даёт ≈ 500·1,1^k назначений.
-* Learn-then-Test, проверка от строгого порога к мягкому, остановка на первом неотвергнутом;
-  односторонняя граница Клоппера–Пирсона; δ = 0,1.
-* α ∈ {0,01; 0,02; 0,05; 0,10}. **Основное α = 0,10.** Выбрано по версии 0: при α ≤ 0,05
-  автоматизация на этом корпусе составляет единицы процентов, и различия систем не измерить.
-  α = 0,05 — вторичный показатель.
-* Изотоническая калибровка используется только для показа оценок и ECE.
+* Policy: apply a pair automatically if the raw stacker score is ≥ τ.
+* Grid of τ from `calib_fit`: the k-th threshold applies ≈ 500·1.1^k pairs.
+* Learn-then-Test, testing from the strictest threshold to the most permissive, stopping at
+  the first non-rejection; one-sided Clopper–Pearson bound; δ = 0.1.
+* α ∈ {0.01, 0.02, 0.05, 0.10}. **Primary α = 0.10.** Chosen from version 0: at α ≤ 0.05
+  automation on this corpus is a few percent and differences between systems cannot be
+  measured. α = 0.05 is secondary.
+* Isotonic calibration is used only to display scores and compute ECE.
 
-## 8. Гипотеза H1 и правило решения
+## 8. Hypothesis H1 and decision rule
 
-Основная метрика: сертифицированный AutoRecall при α = 0,10 на `risk_cert`.
+Primary metric: certified AutoRecall at α = 0.10 on `risk_cert`.
 
-Контрасты (обработка − контроль): G1 − C1, G1 − C2, G2 − C1.
+Contrasts (treatment − control): G1 − C1, G1 − C2, G2 − C1.
 
-95% доверительный интервал — парный бутстрап по документам `risk_cert`, 1000 выборок,
-seed 0. На каждой выборке сертификация повторяется целиком с той же сеткой порогов.
+95% confidence interval: paired bootstrap over `risk_cert` documents, 1,000 resamples, seed 0.
+Each resample repeats the whole certification with the same threshold grid.
 
-**Граф даёт информацию сверх текста, если нижняя граница интервала положительна для всех
-трёх контрастов.** Вторично: разница mRP на `model_dev` (out-of-fold), парный бутстрап.
+**The graph adds information beyond text if the lower bound of the interval is positive for
+all three contrasts.** Secondary: mRP difference on `model_dev` (out-of-fold), paired bootstrap.
 
-## 9. Известные ограничения версии 1.0
+## 9. Known limitations of version 1.0
 
-* Один seed для сильной текстовой модели (ограничение вычислений).
-* Граница Клоппера–Пирсона предполагает независимость пар; бутстрап по документам частично
-  это компенсирует.
-* Опорный граф не пополняется метками `model_dev` и `calib_fit`, поэтому покрытие падает
-  к `final_test` (65%).
+* One seed for the strong text model (compute budget).
+* The Clopper–Pearson bound assumes independent pairs; the document bootstrap partly
+  compensates.
+* The reference graph is not extended with `model_dev` and `calib_fit` labels, so coverage
+  decays towards `final_test` (65%).
 
-# Часть 2. Протокол 2.0: устойчивость к размножению источников (H2)
+# Part 2. Protocol 2.0: robustness to source duplication (H2)
 
-Заморожен 2026-10-08, до первого запуска. Параметры в
-[`protocol_v2.py`](../research/src/evigraph_research/protocol_v2.py). Разбиение, стекеры,
-сетка порогов и δ берутся из версии 1.0 без изменений. Результаты версии 1.0 известны:
-лучшая система — C1 (LEGAL-BERT + kNN). Именно поэтому её уязвимость и проверяется.
+Frozen on 2026-10-08, before the first run. Parameters in
+[`protocol_v2.py`](../research/src/evigraph_research/protocol_v2.py). Splits, stackers,
+threshold grid and δ are inherited unchanged from version 1.0. Version 1.0 results are known:
+the best system is C1 (LEGAL-BERT + kNN), which is why its vulnerability is tested.
 
-## 10. Сценарий
+## 10. Scenario
 
-Политика обучается и сертифицируется на чистом опорном пуле (`train`). При эксплуатации
-в пул поступают копии уже существующих документов. Стекеры и сертифицированные пороги
-не меняются; пересчитываются только признаки, зависящие от пула (kNN и графовые голоса),
-для документов `risk_cert`.
+The policy is fitted and certified on the clean reference pool (`train`). At deployment the
+pool receives copies of existing documents. Stackers and certified thresholds do not change;
+only pool-dependent features (kNN and graph votes) of `risk_cert` documents are recomputed.
 
-* **Цели:** 500 случайных документов `risk_cert` (seed 2).
-* **Источник цели** — ближайший к ней документ `train` по косинусу TF-IDF.
-* **Копии:** каждый различный источник копируется m ∈ {0, 1, 3, 10, 30, 100} раз. Копии
-  получают новые идентификаторы, метки источника и его исходящие связи EUR-Lex; входящих
-  связей у них нет.
-* **Шум текста копий:** доля случайно удалённых токенов 0, 1% или 5% (seed 3).
-* **Вторичный сценарий:** копии несут метки случайного другого документа `train`
+* **Targets:** 500 random `risk_cert` documents (seed 2).
+* **Source of a target:** its nearest `train` document by TF-IDF cosine.
+* **Copies:** each distinct source is copied m ∈ {0, 1, 3, 10, 30, 100} times. Copies get new
+  identifiers, the source's labels and its outgoing EUR-Lex links; they have no incoming links.
+* **Copy text noise:** share of randomly deleted tokens 0, 1% or 5% (seed 3).
+* **Secondary scenario:** copies carry the labels of a random other `train` document
   (m ∈ {10, 100}, seed 4).
 
-## 11. Системы
+## 11. Systems
 
-| Система | Отличие |
+| System | Difference |
 |---|---|
-| T1_strong | не зависит от пула (контроль сценария) |
-| C1_strong+knn | kNN из версии 1.0: каждый документ пула — отдельный голос |
-| C1p_strong+knn_prov | kNN с учётом происхождения: 200 кандидатов сворачиваются в группы происхождения (сходство группы — максимум по членам, метки — среднее), голосуют 20 лучших групп |
-| G1_strong+graph | графовые голоса из версии 1.0 |
-| G1p_strong+graph_prov | графовые голоса, где каждая группа происхождения — один сосед; размер хаба для порога 500 считается в группах, а не в документах |
+| T1_strong | independent of the pool (scenario control) |
+| C1_strong+knn | kNN of version 1.0: every pool document is a separate vote |
+| C1p_strong+knn_prov | provenance-aware kNN: 200 candidates are collapsed to provenance groups (group similarity = max over members, labels = mean), the 20 best groups vote |
+| G1_strong+graph | graph votes of version 1.0 |
+| G1p_strong+graph_prov | graph votes where each provenance group is one neighbour; the hub size compared with the cap of 500 is counted in groups, not documents |
 
-Группа происхождения в пуле — группа почти-копий из `dedup` (Jaccard ≥ 0,9). Копия
-присоединяется к группе источника, если оценка Jaccard по MinHash ≥ 0,8; иначе она
-образует собственную группу.
+A provenance group in the pool is a near-duplicate group from `dedup` (Jaccard ≥ 0.9). A copy
+joins its source's group if the MinHash-estimated Jaccard is ≥ 0.8; otherwise it forms its
+own group.
 
-Стекеры C1p и G1p обучаются на `model_dev` по правилам версии 1.0, пороги сертифицируются
-на чистом `risk_cert` при α = 0,10 (вторично α = 0,05).
+The C1p and G1p stackers are fitted on `model_dev` under the version 1.0 rules; thresholds
+are certified on the clean `risk_cert` at α = 0.10 (secondary α = 0.05).
 
-## 12. Метрики и правила решения
+## 12. Metrics and decision rules
 
-Реализованный риск — доля ошибок среди автоматически применённых пар. Он измеряется на
-целевых документах при фиксированном сертифицированном пороге. 95% интервалы — бутстрап
-по документам, 1000 выборок, seed 5. Порог при этом не пересчитывается, поэтому смещения,
-найденного в версии 1.0, здесь нет.
+Realised risk is the share of errors among automatically applied pairs. It is measured on the
+targeted documents at the fixed certified threshold. 95% intervals: document bootstrap, 1,000
+resamples, seed 5. The threshold is not recomputed, so the bias found in version 1.0 does not
+apply here.
 
-При m = 100 точных копий и α = 0,10:
+At m = 100 exact copies and α = 0.10:
 
-* **H2a, уязвимость:** нижняя граница интервала реализованного риска C1 выше α.
-* **H2b, инвариантность:** верхняя граница интервала изменения риска C1p относительно m = 0
-  (парный бутстрап) не больше 1 п.п.
-* **H2c, цена:** на чистом пуле AutoRecall(C1p) − AutoRecall(C1) ≥ −2 п.п.
+* **H2a, vulnerability:** the lower bound of the interval for C1's realised risk is above α.
+* **H2b, invariance:** the upper bound of the interval for the change in C1p's risk relative
+  to m = 0 (paired bootstrap) is at most 1 pp.
+* **H2c, cost:** on the clean pool, AutoRecall(C1p) − AutoRecall(C1) ≥ −2 pp.
 
-H2 подтверждается, если выполнены все три правила. Графовые системы, уровни шума и копии
-с чужими метками описываются без правила решения.
+H2 is supported if all three rules hold. Graph systems, noise levels and mislabelled copies
+are reported without a decision rule.
 
-# Часть 3. Протокол 2.1: подтверждение H2 после разбора версии 2.0
+# Part 3. Protocol 2.1: confirming H2 after the version 2.0 analysis
 
-Зарегистрирован 2026-10-08 после результатов 2.0 (коммит `4199fc5`) и до первого запуска 2.1.
-Параметры — [`protocol_v21.py`](../research/src/evigraph_research/protocol_v21.py).
+Registered on 2026-10-08 after the 2.0 results (commit `4199fc5`) and before the first 2.1 run.
+Parameters in [`protocol_v21.py`](../research/src/evigraph_research/protocol_v21.py).
 
-## 13. Что изменено и почему
+## 13. What changed and why
 
-* **Адаптивное окно кандидатов в C1p.** В 2.0 правило H2b не выполнено: C1p инвариантен до
-  30 копий, но при 100 копиях фиксированное окно из 200 кандидатов заполняется копиями
-  соседних источников, и групп остаётся меньше 20. В 2.1 окно расширяется (×4), пока в нём
-  не окажется 20 различных групп или весь пул.
-* **Новые цели.** 500 документов `risk_cert` с seed 6 из тех, что не были целями в 2.0.
-  Исправление подтверждается не на данных, которые к нему привели.
-* **H2d — подтверждающее правило.** В 2.0 устойчивость графа была наблюдением; в 2.1 это
-  гипотеза с правилом решения.
+* **Adaptive candidate window in C1p.** In 2.0, rule H2b failed: C1p is invariant up to 30
+  copies, but at 100 copies the fixed window of 200 candidates fills up with copies of nearby
+  sources and fewer than 20 groups remain. In 2.1 the window widens (×4) until it holds 20
+  distinct groups or the whole pool.
+* **Fresh targets.** 500 `risk_cert` documents drawn with seed 6 from those that were not 2.0
+  targets. The fix is not confirmed on the data that motivated it.
+* **H2d becomes a confirmatory rule.** In 2.0 graph robustness was an observation; in 2.1 it
+  is a hypothesis with a decision rule.
 
-Остальное — как в 2.0: сценарии, системы, пороги, бутстрап.
+Everything else is as in 2.0: scenarios, systems, thresholds, bootstrap.
 
-## 14. Правила решения
+## 14. Decision rules
 
-H2a, H2b, H2c — как в разделе 12. Дополнительно:
+H2a, H2b and H2c as in section 12. In addition:
 
-* **H2d, устойчивость графа:** верхняя граница 95% интервала изменения реализованного риска
-  G1 (наивный граф) при 100 точных копиях относительно m = 0 не больше 1 п.п.
+* **H2d, graph robustness:** the upper bound of the 95% interval for the change in realised
+  risk of G1 (naive graph) at 100 exact copies relative to m = 0 is at most 1 pp.
 
-H2 подтверждается, если выполнены H2a, H2b и H2c; H2d оценивается отдельно.
+H2 is supported if H2a, H2b and H2c hold; H2d is judged separately.
 
-## История
+## History
 
-| Версия | Дата | Изменение |
+| Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-07 | первая заморозка |
-| 1.0 | 2026-10-07 | до первого прогона: выбрана LEGAL-BERT base (замер на MPS: 1,28 с/шаг, ~4,5 ч на 4 эпохи; small — ~1,3 ч); вектор соседей в C2 усечён до 1 000 термов (без усечения матрица train занимала 8 ГБ) |
-| 2.0 | 2026-10-08 | часть 2: гипотеза H2, сценарий размножения источников, правила решения; зарегистрирована до первого запуска |
-| 2.0 | 2026-10-08 | до первого запуска: в G1p размер хаба считается в группах происхождения (иначе копии выталкивают хаб за порог и меняют признаки в обход группировки) |
-| 2.1 | 2026-10-08 | часть 3: адаптивное окно кандидатов, новые цели, правило H2d; зарегистрирована после результатов 2.0 и до запуска 2.1 |
+| 1.0 | 2026-10-07 | first freeze |
+| 1.0 | 2026-10-07 | before the first run: LEGAL-BERT base chosen (MPS benchmark: 1.28 s/step, ~4.5 h for 4 epochs; small ~1.3 h); the C2 neighbour vector truncated to 1,000 terms (untruncated, the train matrix took 8 GB) |
+| 2.0 | 2026-10-08 | part 2: hypothesis H2, source-duplication scenario, decision rules; registered before the first run |
+| 2.0 | 2026-10-08 | before the first run: in G1p the hub size is counted in provenance groups (otherwise copies push a hub over the cap and change features around the grouping) |
+| 2.1 | 2026-10-08 | part 3: adaptive candidate window, fresh targets, rule H2d; registered after the 2.0 results and before the 2.1 run |
+| — | 2026-10-08 | document translated from Russian to English; no change in substance (the Russian original is in the git history) |

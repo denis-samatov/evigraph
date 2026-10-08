@@ -1,54 +1,54 @@
 # EviGraph
 
-Исследовательский проект о сертифицированной разметке документов понятиями из контролируемого
-словаря: система ставит тег автоматически, только если доля ошибок среди автоматических тегов
-гарантированно (с вероятностью 1 − δ) не превышает α, а остальное отдаёт эксперту.
+A research project on **certified document tagging** with concepts from a controlled
+vocabulary: the system applies a tag automatically only if the error rate among automatic
+tags is guaranteed (with probability 1 − δ) not to exceed α, and sends everything else to an
+expert.
 
-Рабочее название статьи — **«Copies Are Not Corroboration: Certified Document Tagging under
-Source Duplication»**, черновик: [`docs/paper/draft.md`](docs/paper/draft.md).
+Working paper title: **"Copies Are Not Corroboration: Certified Document Tagging under Source
+Duplication"** — draft in [`docs/paper/draft.md`](docs/paper/draft.md).
 
-## Главные результаты
+## Main results
 
-Корпус — MultiEURLEX (английская часть, 127 понятий EuroVoc) и 274 тыс. связей между актами
-из EUR-Lex. Каждый эксперимент зарегистрирован в [`docs/PROTOCOL.md`](docs/PROTOCOL.md) до
-запуска; итоговая тестовая часть ещё не открывалась.
+Corpus: MultiEURLEX (English, 127 EuroVoc concepts) plus 274k act-to-act relations from
+EUR-Lex. Every experiment was registered in [`docs/PROTOCOL.md`](docs/PROTOCOL.md) before it
+was run; the final test split has not been opened yet.
 
-1. **Граф связей не повышает точность сверх поиска.** LEGAL-BERT + поиск похожих документов
-   автоматизирует 56,3% тегов при α = 10%, LEGAL-BERT + граф — 55,4%
-   ([результаты 1.0](research/reports/PROTOCOL_V1_RESULTS.md)).
-2. **Поиск похожих документов ломает гарантию, когда в базе появляются копии.** При 30 копиях
-   источника реальный риск на затронутых документах — 16,3% при сертифицированных 10%
-   (подтверждающий прогон, [результаты 2.1](research/reports/PROTOCOL_V21_RESULTS.md);
-   первая попытка — [2.0](research/reports/PROTOCOL_V2_RESULTS.md)).
-3. **Учёт происхождения возвращает гарантию** для опознаваемых копий (изменение риска —
-   ровно 0) и ничего не стоит на чистых данных; **ссылочный граф устойчив сам по себе**
-   (−0,1 п.п.), потому что копия с новым идентификатором не получает входящих ссылок.
-4. **Сильный текст — главный рычаг:** при α = 5% автоматизация растёт с 4,9% (TF-IDF) до
-   34,3% (LEGAL-BERT + kNN).
+1. **The citation graph does not improve accuracy beyond retrieval.** LEGAL-BERT + retrieval
+   of similar documents automates 56.3% of tags at α = 10%, LEGAL-BERT + graph 55.4%
+   ([protocol 1.0 results](research/reports/PROTOCOL_V1_RESULTS.md)).
+2. **Retrieval of similar documents breaks the guarantee when copies enter the collection.**
+   With 30 copies of a source, the realised risk on affected documents is 16.3% at a certified
+   10% (confirmatory run, [protocol 2.1 results](research/reports/PROTOCOL_V21_RESULTS.md);
+   first attempt: [2.0](research/reports/PROTOCOL_V2_RESULTS.md)).
+3. **Provenance-aware aggregation restores the guarantee** for recognisable copies (risk change
+   exactly 0) at no cost on clean data; **the citation graph is robust by itself** (−0.1 pp),
+   because a copy with a new identifier receives no incoming links.
+4. **Strong text is the main lever:** at α = 5% automation grows from 4.9% (TF-IDF) to 34.3%
+   (LEGAL-BERT + kNN).
 
-![Риск при размножении источников](research/reports/figures/risk_vs_copies.png)
+![Realised risk under source duplication](research/reports/figures/risk_vs_copies.png)
 
-## Структура
+## Layout
 
-| Путь | Что там |
+| Path | Contents |
 |---|---|
-| [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | протокол оценки: версии 1.0, 2.0, 2.1 и их история |
-| [`docs/paper/draft.md`](docs/paper/draft.md) | черновик статьи |
-| [`research/`](research/README.md) | код, тесты, отчёты |
-| `research/reports/` | результаты в JSON и отчёты по каждой версии протокола |
-| `research/reports/figures/` | рисунки для статьи |
+| [`docs/PROTOCOL.md`](docs/PROTOCOL.md) | evaluation protocol: versions 1.0, 2.0, 2.1 and their history |
+| [`docs/paper/draft.md`](docs/paper/draft.md) | paper draft |
+| [`research/`](research/README.md) | code, tests, reports |
+| `research/reports/` | JSON results and a report per protocol version |
+| `research/reports/figures/` | paper figures |
 
-## Воспроизведение
+## Reproducing
 
 ```bash
 cd research && make dev && make all
 ```
 
-Дальше по порядку: `uv run evigraph-research strong-text` (дообучение LEGAL-BERT, ~6 ч на
-Apple MPS), `uv run evigraph-research compare` (протокол 1.0),
-`uv run evigraph-research h2 --version 2.1` (протокол 2.1), затем
-`uv run python -m evigraph_research.figures h2_results_v21.json`.
+Then, in order: `uv run evigraph-research strong-text` (LEGAL-BERT fine-tuning, ~6 h on Apple
+MPS), `uv run evigraph-research compare` (protocol 1.0), `uv run evigraph-research h2 --version 2.1`
+(protocol 2.1), and `uv run python -m evigraph_research.figures h2_results_v21.json`.
 
-Изначальный продуктовый замысел — IDE для проверки графа знаний по документам (Theia + GLSP,
-ядро на Python) — описан в исходном архитектурном документе; исследовательская часть
-проверяет, на чём такая система может держать гарантии качества.
+The original product idea — an IDE for reviewing a knowledge graph built from documents
+(Theia + GLSP, a Python core) — is described in the initial architecture document; the research
+part establishes what such a system can base its quality guarantees on.

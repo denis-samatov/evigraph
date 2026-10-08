@@ -1,126 +1,126 @@
-# Результаты протокола оценки 1.0
+# Protocol 1.0 results
 
-Дата прогона: 2026-10-08. Протокол: [`docs/PROTOCOL.md`](../../docs/PROTOCOL.md), заморожен
-в коммите `c937f31` до получения этих результатов. Данные машинного чтения:
-`comparison_v1.json`, `strong_text.json`. `final_test` не открывался
-(`final_test_access.log` отсутствует).
+Run date: 2026-10-08. Protocol: [`docs/PROTOCOL.md`](../../docs/PROTOCOL.md), frozen in commit
+`c937f31` before these results existed. Machine-readable data: `comparison_v1.json`,
+`strong_text.json`. `final_test` has not been opened (no `final_test_access.log`).
 
-## Коротко
+## Summary
 
-1. **Решение по H1 — граф не даёт информации сверх текста.** Правило протокола требует,
-   чтобы во всех трёх контрастах нижняя граница 95% интервала была выше нуля. Это не
-   выполнено ни в одном. Вывод держится и без интервалов: по точечным оценкам графовая
-   система не лучше поиска похожих документов (−0,9 п.п.), а объединение всех признаков
-   хуже него (−2,2 п.п.).
-2. **Граф помогает сильному тексту, но то же самое даёт поиск без графа.** Добавление
-   графа к LEGAL-BERT поднимает AutoRecall при α = 0,10 с 50,5% до 55,4%. Поиск 20
-   ближайших документов по TF-IDF даёт 56,3%. Метки связанных актов несут сигнал, но
-   его почти целиком можно получить из похожих по тексту документов.
-3. **Сильная текстовая модель резко расширяет безопасную автоматизацию.** При α = 0,05
-   AutoRecall растёт с 4,9% (TF-IDF) до 28,2% (LEGAL-BERT) и 34,3% (LEGAL-BERT + kNN).
-   Лучшая система C1 — единственная, у которой сертифицирован порог при α = 0,02
-   (8,8% назначений, фактический риск 1,4%).
-4. **Методическая находка: интервалы бутстрапа для сертифицированного AutoRecall смещены
-   вниз** (раздел 4). На вывод по H1 это не влияет, но процедуру нужно заменить в
-   следующей версии протокола.
+1. **H1 decision: the graph adds no information beyond text.** The protocol rule requires the
+   lower bound of the 95% interval to be above zero in all three contrasts. It is not met in
+   any. The conclusion holds without intervals too: by point estimates the graph system is no
+   better than retrieval of similar documents (−0.9 pp), and combining all features is worse
+   than retrieval (−2.2 pp).
+2. **The graph helps a strong text model, but retrieval without a graph gives the same.**
+   Adding the graph to LEGAL-BERT raises AutoRecall at α = 0.10 from 50.5% to 55.4%.
+   Retrieving the 20 nearest documents by TF-IDF gives 56.3%. Labels of linked acts carry
+   signal, but almost all of it is available from textually similar documents.
+3. **A strong text model greatly widens safe automation.** At α = 0.05 AutoRecall grows from
+   4.9% (TF-IDF) to 28.2% (LEGAL-BERT) and 34.3% (LEGAL-BERT + kNN). The best system, C1, is
+   the only one with a certified threshold at α = 0.02 (8.8% of assignments, realised risk
+   1.4%).
+4. **Methodological finding: bootstrap intervals for certified AutoRecall are biased
+   downwards** (section 4). It does not affect the H1 conclusion, but the procedure must be
+   replaced in the next protocol version.
 
-## 1. Сильная текстовая модель
+## 1. Strong text model
 
-LEGAL-BERT base (`nlpaueb/legal-bert-base-uncased`, 110 млн параметров), первые 512 word
-pieces, 4 эпохи, 6 ч 11 мин на Apple MPS.
+LEGAL-BERT base (`nlpaueb/legal-bert-base-uncased`, 110M parameters), first 512 word pieces,
+4 epochs, 6 h 11 min on Apple MPS.
 
-| Эпоха | 1 | 2 | 3 | 4 |
+| Epoch | 1 | 2 | 3 | 4 |
 |---|---|---|---|---|
-| mRP на подмножестве ранней остановки (последние 5% train) | 0,690 | 0,770 | 0,797 | **0,805** |
+| mRP on the early-stopping subset (latest 5% of train) | 0.690 | 0.770 | 0.797 | **0.805** |
 
-Выбрана 4-я эпоха. Рост к концу замедлился, но не остановился: модель, вероятно, не
-дообучена до предела.
+Epoch 4 is selected. Gains slowed down but did not stop: the model is probably not trained to
+convergence.
 
-## 2. Качество ранжирования
+## 2. Ranking quality
 
-| Система | mRP model_dev (OOF) | macro-F1 model_dev | mRP risk_cert | ECE топ-10 risk_cert |
+| System | mRP model_dev (OOF) | macro-F1 model_dev | mRP risk_cert | top-10 ECE risk_cert |
 |---|---|---|---|---|
-| T0_tfidf | 0,791 | 0,500 | 0,716 | 0,028 |
-| T1_strong | 0,770 | 0,377 | 0,735 | 0,023 |
-| C1_strong+knn | 0,792 | 0,431 | **0,754** | 0,021 |
-| C2_strong+nbtext | 0,801 | 0,469 | 0,735 | 0,024 |
-| G1_strong+graph | 0,789 | 0,424 | 0,751 | 0,022 |
-| G2_strong+knn+nbtext+graph | **0,809** | 0,492 | 0,740 | 0,026 |
+| T0_tfidf | 0.791 | 0.500 | 0.716 | 0.028 |
+| T1_strong | 0.770 | 0.377 | 0.735 | 0.023 |
+| C1_strong+knn | 0.792 | 0.431 | **0.754** | 0.021 |
+| C2_strong+nbtext | 0.801 | 0.469 | 0.735 | 0.024 |
+| G1_strong+graph | 0.789 | 0.424 | 0.751 | 0.022 |
+| G2_strong+knn+nbtext+graph | **0.809** | 0.492 | 0.740 | 0.026 |
 
-На model_dev LEGAL-BERT уступает TF-IDF по mRP (0,770 против 0,791) и заметно по
-macro-F1 (0,377 против 0,500): 512 токенов теряют хвост длинных актов, и хуже всего это
-сказывается на редких понятиях. На более позднем risk_cert картина обратная (0,735 против
-0,716): трансформер устойчивее к временному сдвигу.
+On model_dev LEGAL-BERT trails TF-IDF in mRP (0.770 vs 0.791) and clearly in macro-F1 (0.377
+vs 0.500): 512 tokens lose the tail of long acts, which hurts rare concepts most. On the later
+risk_cert the picture reverses (0.735 vs 0.716): the transformer is more robust to temporal
+drift.
 
-## 3. Сертифицированная автоматизация на risk_cert
+## 3. Certified automation on risk_cert
 
-δ = 0,1; 2 659 документов; при α = 0,01 ни одна система не сертифицирована.
+δ = 0.1; 2,659 documents; at α = 0.01 no system is certified.
 
-| Система | α = 0,02 | α = 0,05 | α = 0,10 | 95% ДИ (α = 0,10) | Риск факт. (α = 0,10) | Авто на документ | Документов полностью верно |
+| System | α = 0.02 | α = 0.05 | α = 0.10 | 95% CI (α = 0.10) | Realised risk (α = 0.10) | Auto tags per document | Documents fully correct |
 |---|---|---|---|---|---|---|---|
-| T0_tfidf | 0 | 4,9% | 40,4% | 36,6–41,8% | 9,4% | 2,21 | 3,1% |
-| T1_strong | 0 | 28,2% | 50,5% | 46,3–51,5% | 9,2% | 2,76 | 9,0% |
-| C1_strong+knn | **8,8%** | **34,3%** | **56,3%** | 55,2–57,4% | 8,6% | 3,05 | 11,1% |
-| C2_strong+nbtext | 0 | 26,4% | 50,4% | 49,3–54,6% | 8,4% | 2,73 | 10,1% |
-| G1_strong+graph | 0 | 30,6% | 55,4% | 48,9–56,3% | 9,6% | 3,03 | 11,2% |
-| G2_strong+knn+nbtext+graph | 0 | 24,2% | 54,1% | 49,7–55,1% | 9,4% | 2,96 | 11,1% |
+| T0_tfidf | 0 | 4.9% | 40.4% | 36.6–41.8% | 9.4% | 2.21 | 3.1% |
+| T1_strong | 0 | 28.2% | 50.5% | 46.3–51.5% | 9.2% | 2.76 | 9.0% |
+| C1_strong+knn | **8.8%** | **34.3%** | **56.3%** | 55.2–57.4% | 8.6% | 3.05 | 11.1% |
+| C2_strong+nbtext | 0 | 26.4% | 50.4% | 49.3–54.6% | 8.4% | 2.73 | 10.1% |
+| G1_strong+graph | 0 | 30.6% | 55.4% | 48.9–56.3% | 9.6% | 3.03 | 11.2% |
+| G2_strong+knn+nbtext+graph | 0 | 24.2% | 54.1% | 49.7–55.1% | 9.4% | 2.96 | 11.1% |
 
-## 4. Гипотеза H1
+![Automation frontier](figures/automation_frontier.png)
 
-Основная метрика — AutoRecall при α = 0,10; парный бутстрап по документам risk_cert,
-1 000 выборок, сертификация повторяется на каждой.
+## 4. Hypothesis H1
 
-| Обработка − контроль | Разница AutoRecall | 95% ДИ | 95% ДИ разницы mRP (model_dev) |
+Primary metric: AutoRecall at α = 0.10; paired bootstrap over risk_cert documents, 1,000
+resamples, certification repeated on each.
+
+| Treatment − control | AutoRecall difference | 95% CI | 95% CI of mRP difference (model_dev) |
 |---|---|---|---|
-| G1_strong+graph − C1_strong+knn | −0,9 п.п. | −7,0 … −0,5 п.п. | −0,006 … 0,000 |
-| G1_strong+graph − C2_strong+nbtext | +4,9 п.п. | −3,6 … +5,5 п.п. | −0,016 … −0,009 |
-| G2_strong+knn+nbtext+graph − C1_strong+knn | −2,2 п.п. | −6,0 … −1,6 п.п. | +0,014 … +0,019 |
+| G1_strong+graph − C1_strong+knn | −0.9 pp | −7.0 … −0.5 pp | −0.006 … 0.000 |
+| G1_strong+graph − C2_strong+nbtext | +4.9 pp | −3.6 … +5.5 pp | −0.016 … −0.009 |
+| G2_strong+knn+nbtext+graph − C1_strong+knn | −2.2 pp | −6.0 … −1.6 pp | +0.014 … +0.019 |
 
-**Решение по правилу протокола — граф даёт информацию сверх текста: нет.**
+**Decision by the protocol rule — the graph adds information beyond text: no.**
 
-**Интервалы смещены вниз.** У большинства систем точечная оценка лежит у верхнего края
-своего интервала: например, у G1 это 55,4% при интервале 48,9–56,3%. Вероятная причина —
-правило остановки в сертификации. На выборке бутстрапа случайный провал на любом пороге
-обрывает всю последовательность, поэтому пересчитанный AutoRecall чаще занижен, чем
-завышен. Перцентильный интервал для такой негладкой величины не калиброван. Поэтому
-интервалы контрастов, особенно «значимо отрицательные» G1 − C1 и G2 − C1, нельзя читать
-буквально. Вывод «граф не лучше контроля» опирается и на точечные оценки, так что от
-этой проблемы он не зависит. В следующей версии протокола нужна другая процедура,
-например сравнение при пороге, сертифицированном на полной выборке, или подвыборочный
-бутстрап.
+**The intervals are biased downwards.** For most systems the point estimate sits near the upper
+end of its interval: for G1 it is 55.4% with an interval of 48.9–56.3%. The likely cause is the
+stopping rule of the certification. In a bootstrap resample, a spurious failure at any threshold
+cuts the whole sequence short, so resampled AutoRecall is more often too low than too high. A
+percentile interval for such a non-smooth quantity is not calibrated. The contrast intervals,
+especially the "significantly negative" G1 − C1 and G2 − C1, should not be read literally. The
+conclusion "the graph is no better than the control" also rests on point estimates, so it does
+not depend on this issue. The next protocol version needs a different procedure, such as
+comparing at a threshold certified on the full sample, or a subsampling bootstrap.
 
-## 5. Что это значит для EviGraph
+## 5. What this means for EviGraph
 
-* **Для продукта граф полезен, но не для точности.** В этой задаче качество автоматизации
-  определяют сильная текстовая модель и поиск похожих документов. Ценность графа в IDE —
-  объяснимость (какие акты связаны, кто от кого произошёл) и навигация, а не прирост
-  AutoRecall.
-* **Для статьи H1 в нынешней форме на MultiEURLEX не подтверждается.** Есть три честных
-  направления:
-  1. Признаки, которых нет в тексте и в поиске: тип и направление связи с учётом времени,
-     изменения статуса акта (отменён, изменён), GNN поверх типизированного графа.
-     Проверять их против C1 как основного контроля.
-  2. Корпус, где текст беднее, а связи богаче (короткие документы, обращения поддержки,
-     договоры с приложениями).
-  3. Переформулировать вклад: не «граф повышает точность», а «граф не повышает точность,
-     но делает решения проверяемыми». Это требует экспериментов с экспертами и измерения
-     их времени.
-* **Сильный текст — главный рычаг автоматизации.** Переход от TF-IDF к LEGAL-BERT + kNN
-  увеличил сертифицируемую автоматизацию при α = 0,05 в 7 раз (4,9% → 34,3%).
+* **For the product, the graph is useful, but not for accuracy.** In this task automation
+  quality is driven by a strong text model and retrieval of similar documents. The graph's
+  value in the IDE is explainability (which acts are linked, what derives from what) and
+  navigation, not AutoRecall gains.
+* **For the paper, H1 in its current form is not supported on MultiEURLEX.** There are three
+  honest directions:
+  1. Features absent from both text and retrieval: relation type and direction over time,
+     changes of an act's status (repealed, amended), a GNN over the typed graph — tested
+     against C1 as the main control.
+  2. A corpus where text is poorer and links are richer (short documents, support tickets,
+     contracts with annexes).
+  3. Reframing the contribution: not "the graph improves accuracy" but "the graph does not
+     improve accuracy but makes decisions verifiable", which needs experiments with experts
+     measuring their time. (Protocol 2.x took a fourth direction: robustness of guarantees.)
+* **A strong text model is the main lever for automation.** Moving from TF-IDF to
+  LEGAL-BERT + kNN multiplied certified automation at α = 0.05 by seven (4.9% → 34.3%).
 
-## 6. Ограничения
+## 6. Limitations
 
-* Один seed LEGAL-BERT, 4 эпохи; модель, вероятно, не дообучена.
-* Интервалы бутстрапа смещены (раздел 4).
-* Граница Клоппера–Пирсона предполагает независимость пар.
-* LEGAL-BERT предобучен на текстах EUR-Lex, включая все части разбиения (без меток).
-* Опорный граф не пополняется метками model_dev и calib_fit.
+* One LEGAL-BERT seed, 4 epochs; the model is probably not fully trained.
+* Bootstrap intervals are biased (section 4).
+* The Clopper–Pearson bound assumes independent pairs.
+* LEGAL-BERT was pre-trained on EUR-Lex texts, including all splits (without labels).
+* The reference graph is not extended with model_dev and calib_fit labels.
 
-## 7. Стоимость
+## 7. Cost
 
-| Этап | Время |
+| Stage | Time |
 |---|---|
-| дообучение LEGAL-BERT (4 эпохи, MPS) | 6 ч 11 мин |
-| контроль C2: матрицы соседей + 127 моделей | ~3 мин |
-| контроль C1: kNN для 9 900 документов | ~2 мин |
-| стекеры, сертификация, бутстрап (6 систем × 1 000 выборок) | 26 с |
+| LEGAL-BERT fine-tuning (4 epochs, MPS) | 6 h 11 min |
+| C2 control: neighbour matrices + 127 models | ~3 min |
+| C1 control: kNN for 9,900 documents | ~2 min |
+| stackers, certification, bootstrap (6 systems × 1,000 resamples) | 26 s |

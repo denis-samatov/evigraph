@@ -18,13 +18,13 @@ def render() -> str:
     systems = r["systems"]
     a = str(protocol.ALPHA_PRIMARY)
     lines = [
-        f"Протокол {r['protocol']}; эпоха сильной модели: {r['strong_text_epoch']}; "
-        f"доля документов оценки с соседями для C2: {_pct(r['nbtext_coverage_eval'])}.",
+        f"Protocol {r['protocol']}; strong model epoch: {r['strong_text_epoch']}; "
+        f"evaluation documents with C2 neighbours: {_pct(r['nbtext_coverage_eval'])}.",
         "",
-        "**Качество ранжирования**",
+        "**Ranking quality**",
         "",
-        "| Система | mRP model_dev (OOF) | macro-F1 model_dev "
-        "| mRP risk_cert | ECE топ-10 risk_cert |",
+        "| System | mRP model_dev (OOF) | macro-F1 model_dev "
+        "| mRP risk_cert | top-10 ECE risk_cert |",
         "|---|---|---|---|---|",
     ]
     for name, s in systems.items():
@@ -35,10 +35,10 @@ def render() -> str:
         )
     lines += [
         "",
-        f"**Сертифицированная автоматизация на risk_cert (δ = {protocol.DELTA})**",
+        f"**Certified automation on risk_cert (δ = {protocol.DELTA})**",
         "",
-        "| Система | AutoRecall α=0,05 | AutoRecall α=0,10 | 95% ДИ (α=0,10) "
-        "| Риск факт. α=0,10 | Авто на документ α=0,10 |",
+        "| System | AutoRecall α=0.05 | AutoRecall α=0.10 | 95% CI (α=0.10) "
+        "| Realised risk α=0.10 | Auto tags per document α=0.10 |",
         "|---|---|---|---|---|---|",
     ]
     for name, s in systems.items():
@@ -51,22 +51,22 @@ def render() -> str:
     h1 = r["h1"]
     lines += [
         "",
-        f"**H1: контрасты AutoRecall при α = {h1['alpha']}, парный бутстрап по документам**",
+        f"**H1: AutoRecall contrasts at α = {h1['alpha']}, paired document bootstrap**",
         "",
-        "| Обработка − контроль | Разница AutoRecall | 95% ДИ | 95% ДИ разницы mRP (model_dev) |",
+        "| Treatment − control | AutoRecall difference | 95% CI | 95% CI of mRP difference |",
         "|---|---|---|---|",
     ]
     for c in h1["contrasts"]:
         lo, hi = c["auto_recall_diff_ci95"]
         mlo, mhi = c["model_dev_mrp_diff_ci95"]
         lines.append(
-            f"| {c['treatment']} − {c['control']} | {100 * c['auto_recall_diff']:+.1f} п.п. "
-            f"| {100 * lo:+.1f} … {100 * hi:+.1f} п.п. | {mlo:+.3f} … {mhi:+.3f} |"
+            f"| {c['treatment']} − {c['control']} | {100 * c['auto_recall_diff']:+.1f} pp "
+            f"| {100 * lo:+.1f} … {100 * hi:+.1f} pp | {mlo:+.3f} … {mhi:+.3f} |"
         )
-    verdict = "да" if h1["graph_adds_beyond_text"] else "нет"
+    verdict = "yes" if h1["graph_adds_beyond_text"] else "no"
     lines += [
         "",
-        f"**Решение по правилу протокола — граф даёт информацию сверх текста: {verdict}.**",
+        f"**Decision by the protocol rule — the graph adds information beyond text: {verdict}.**",
     ]
     return "\n".join(lines)
 

@@ -1,56 +1,74 @@
-# EviGraph — исследовательский задел
+# EviGraph research code
 
-Проверяет, что научная часть EviGraph опирается на реальные данные, ещё до вложений в IDE:
+Everything needed to reproduce the study, from raw data to paper figures:
 
-1. MultiEURLEX (английская часть, EuroVoc `level_2`, 127 понятий) с исходными датами и CELEX;
-2. реальные связи между актами из EUR-Lex Cellar (`cites`, `amends`, `repeals`, `based_on`, …);
-3. точные, близкие и «шаблонные» дубликаты;
-4. пятичастное разбиение по группам и манифест;
-5. go/no-go-отчёт по графу: покрытие, гомофилия меток, сигнал голосования соседей;
-6. CPU-бейзлайн TF-IDF + логистическая регрессия, простые графовые признаки, изотоническая
-   калибровка и сертификация пороговой политики (Learn-then-Test, Clopper–Pearson).
+1. MultiEURLEX (English, EuroVoc `level_2`, 127 concepts) with original dates and CELEX ids;
+2. act-to-act relations from EUR-Lex Cellar (`cites`, `amends`, `repeals`, `based_on`, …);
+3. exact, near and template duplicates;
+4. a grouped five-way split and its manifest;
+5. the graph go/no-go report: coverage, label homophily, neighbour-vote signal;
+6. baselines, the strong text model (LEGAL-BERT), retrieval and graph features, stackers,
+   isotonic calibration and Learn-then-Test certification (Clopper–Pearson);
+7. protocol runners: H1 (`compare`) and H2 (`h2 --version 2.0|2.1`);
+8. provenance-aware aggregation for kNN and graph votes.
 
-Итоги и выводы: [`reports/SPIKE_REPORT.md`](reports/SPIKE_REPORT.md).
+Results and conclusions: [`reports/`](reports) — start with
+[`PROTOCOL_V21_RESULTS.md`](reports/PROTOCOL_V21_RESULTS.md) and
+[`PROTOCOL_V1_RESULTS.md`](reports/PROTOCOL_V1_RESULTS.md); the first exploratory pass is
+[`SPIKE_REPORT.md`](reports/SPIKE_REPORT.md). The protocol is in
+[`../docs/PROTOCOL.md`](../docs/PROTOCOL.md).
 
-## Запуск
+## Running
 
 ```bash
-make dev        # зависимости (uv)
+make dev        # dependencies (uv)
 make all        # download → prepare → cellar → dedup → splits → graph → baseline
 make test lint
 ```
 
-Полный прогон на ноутбуке (12 ядер, 16 ГБ) занимает около 12 минут, большую часть — загрузка. Шаги:
+Then, in order:
 
-| Шаг | Что делает | Время |
+```bash
+uv run evigraph-research strong-text          # LEGAL-BERT fine-tuning, ~6 h on Apple MPS
+uv run evigraph-research compare              # protocol 1.0 (H1)
+uv run evigraph-research h2 --version 2.1     # protocol 2.1 (H2); 2.0 is also reproducible
+uv run python -m evigraph_research.figures h2_results_v21.json
+```
+
+`make all` takes about 12 minutes on a laptop (12 cores, 16 GB), mostly the download:
+
+| Step | What it does | Time |
 |---|---|---|
-| `download` | архив 2,77 ГБ с Hugging Face (`coastalcph/multi_eurlex`), sha256 проверяется | ~5 мин |
-| `prepare` | английский текст + метки уровней 1–3 → `data/interim/corpus_en.parquet` | ~1,5 мин |
-| `cellar` | 325 SPARQL-запросов по 200 CELEX, кэш в `data/cache/cellar/` | ~3,5 мин |
-| `dedup` | MinHash LSH по 5-граммам, порог 0,9 | ~25 с |
-| `baseline` | TF-IDF, 127 моделей, стекеры, сертификация; подробности в `reports/baseline.json` → `cost` | ~1,5 мин |
+| `download` | 2.77 GB archive from Hugging Face (`coastalcph/multi_eurlex`), sha256 checked | ~5 min |
+| `prepare` | English text + level 1–3 labels → `data/interim/corpus_en.parquet` | ~1.5 min |
+| `cellar` | 325 SPARQL queries of 200 CELEX ids, cached in `data/cache/cellar/` | ~3.5 min |
+| `dedup` | MinHash LSH over word 5-grams, threshold 0.9 | ~25 s |
+| `baseline` | TF-IDF, 127 models, stackers, certification; see `reports/baseline.json` → `cost` | ~1.5 min |
 
-`dedup` и `baseline` используют пул процессов. В песочнице, где он запрещён, `dedup`
-переходит на один процесс, а `baseline` нужно запускать вне песочницы.
+`dedup`, `baseline`, `compare` and `h2` use process pools. Inside a sandbox that forbids them,
+`dedup` falls back to a single process; the others must run outside the sandbox. Model weights
+are downloaded from Hugging Face; set `HF_HUB_DISABLE_XET=1` if the Xet transfer client cannot
+reach its servers through a proxy.
 
-## Разбиение
+## Splits
 
-| Часть | Источник | Назначение |
+| Split | Source | Purpose |
 |---|---|---|
-| `train` | официальный train, до 2007-10-29 | обучение моделей; единственные метки в опорном графе |
-| `model_dev` | официальный train, последние ~5000 | выбор архитектур и признаков, стекеры |
-| `calib_fit` | официальный dev, половина групп | калибратор и сетка порогов |
-| `risk_cert` | официальный dev, другая половина | сертификация политики |
-| `final_test` | официальный test | **не открывается** до заморозки системы |
-| `excluded_overlap` | 102 документа | поздние члены ранних групп, исключены ради строгой хронологии |
+| `train` | official train, up to 2007-10-29 | model fitting; the only labels in the reference graph |
+| `model_dev` | official train, latest ~5,000 | feature and hyper-parameter choice, stackers |
+| `calib_fit` | official dev, half of the groups | calibrator and threshold grid |
+| `risk_cert` | official dev, the other half | policy certification |
+| `final_test` | official test | **sealed** until the system is frozen |
+| `excluded_overlap` | 102 documents | late members of early groups, excluded to keep chronology |
 
-Группа разбиения — компонента связности по точным копиям, почти-копиям (Jaccard ≥ 0,9)
-и связям `corrects`. Манифест: `data/interim/split_manifest.parquet`, сводка и sha256 —
+A split group is a connected component over exact copies, near copies (Jaccard ≥ 0.9) and
+`corrects` relations. Manifest: `data/interim/split_manifest.parquet`; summary and sha256 in
 `reports/split_manifest.json`.
 
-## Правила против утечек
+## Leakage rules
 
-* Во входе модели только текст. EuroVoc, `subject-matter`, `directory-code` из Cellar
-  в признаки не попадают: связи берутся только между актами (объект должен иметь CELEX).
-* Графовые признаки используют только метки `train`; собственные метки документа не участвуют.
-* `final_test` не векторизуется и не оценивается в этом заделе.
+* Model inputs are text only. EuroVoc, `subject-matter` and `directory-code` from Cellar never
+  enter the features: only act-to-act relations are kept (the object must have a CELEX id).
+* Graph features use `train` labels only; a document's own labels never take part.
+* `final_test` is not tokenised, vectorised or evaluated; opening it requires
+  `EVIGRAPH_OPEN_FINAL_TEST=1` and is logged.
