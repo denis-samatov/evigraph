@@ -1,8 +1,12 @@
 """Request and response contracts. Requests are strict: no silent type coercion."""
 
 import uuid
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
+
+# JSON carries UUIDs as strings; strict models would otherwise reject them.
+UUIDIn = Annotated[uuid.UUID, Field(strict=False)]
 
 
 class Strict(BaseModel):

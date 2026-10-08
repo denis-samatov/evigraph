@@ -8,7 +8,7 @@ from pydantic import Field
 
 from evigraph_core import reviews
 from evigraph_core.api.deps import SessionDep
-from evigraph_core.api.schemas import Out, Strict
+from evigraph_core.api.schemas import Out, Strict, UUIDIn
 from evigraph_core.models import ReviewKind
 
 router = APIRouter()
@@ -23,14 +23,14 @@ class ReviewIn(Strict):
 
 
 class AddConceptIn(Strict):
-    concept_id: uuid.UUID
+    concept_id: UUIDIn
     idempotency_key: str = Field(min_length=8, max_length=200)
     reviewer: str = Field(min_length=1, max_length=200)
     comment: str | None = None
 
 
 class CompleteIn(Strict):
-    catalog_version_id: uuid.UUID
+    catalog_version_id: UUIDIn
     idempotency_key: str = Field(min_length=8, max_length=200)
     reviewer: str = Field(min_length=1, max_length=200)
 
