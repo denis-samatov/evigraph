@@ -65,7 +65,8 @@ Configuration is read from `EVIGRAPH_*` environment variables (see `settings.py`
 | `POST /projects/{id}/catalogs`, `POST /catalogs/{id}/versions`, `POST /catalog-versions/{id}/publish` | versioned catalogs of concepts |
 | `POST /projects/{id}/documents`, `POST /documents/{id}/versions` | ingest with provenance |
 | `POST /catalog-versions/{id}/releases` | train and activate a release |
-| `POST /document-versions/{id}/suggestions` | ranked concepts with evidence and a decision |
+| `POST /document-versions/{id}/suggestions` | ranked concepts with supporting reviewed documents and a decision |
+| `GET /assertions/{id}/evidence` | exact quotes (code-point offsets, hash-verified) with a deletion-based faithfulness score |
 | `GET /catalog-versions/{id}/review-queue` | documents with undecided suggestions, most uncertain first |
 | `POST /assertions/{id}/review` | accept / reject / withdraw (`expected_revision`, `idempotency_key`) |
 | `POST /document-versions/{id}/assertions` | add a concept the engine missed |
@@ -87,4 +88,5 @@ Configuration is read from `EVIGRAPH_*` environment variables (see `settings.py`
 ## Not implemented yet
 
 Authentication and per-project access control, background workers for training (training
-runs inside the request), the IDE (Theia + GLSP), and evidence extraction with exact quotes.
+runs inside the request), and LLM-based evidence extraction (quotes are currently selected by
+the engine's own passage contributions).

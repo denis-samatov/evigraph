@@ -39,6 +39,15 @@ does the guarantee hold on documents from a later period? Measured with
 
 In every certified configuration the realised error rate on later acts stayed below α.
 
+## Evidence quotes
+
+For each suggestion the service returns exact quotes (passages with code-point offsets,
+verified against the immutable text by SHA-256 on every read). Faithfulness was measured by
+deletion on the 1,000 later acts (level 1, 2,000 reviewed): for 270 documents whose top
+suggestion is correct, removing the two evidence passages lowers the concept's score by
+**0.133** on average, removing two random passages of the same act by **0.026**; evidence beats
+random in **86.7%** of documents (`reports/ruslawod_evidence.json`).
+
 ## What this means for a pilot
 
 1. **About 500 reviewed documents** are the minimum for certifying α = 10% with a catalog of ~20
@@ -63,7 +72,9 @@ reviewed documents.
 
 ## Caveats
 
-One random draw of reviewed documents per size and one evaluation period; gold classifier codes
+Run-to-run variation is real: which provenance groups are held out for certification depends on
+group identifiers of the project, so a repeated run at 2,000 reviewed documents gave a realised
+risk of 5.5% instead of 7.2% (both below α). One random draw of reviewed documents per size and one evaluation period; gold classifier codes
 replace real experts (no anchoring, no disagreement); the classifier itself contains easy
 sections (personnel acts, issuing bodies) that raise top-1 precision (93–97%), which is why mRP
 and automation are the reported measures.

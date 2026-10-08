@@ -72,6 +72,12 @@ class ColdStartEngine:
         empty = [[[] for _ in range(scores.shape[1])] for _ in texts]
         return Scored(scores, empty)
 
+    def passage_scores(self, passages: list[str], concept: int) -> np.ndarray:
+        """Cosine of each passage to the concept's label and definition."""
+        assert self.vectorizer is not None and self.concept_matrix is not None
+        x = self.vectorizer.transform(passages)
+        return np.asarray((x @ self.concept_matrix[concept].T).todense()).ravel()
+
 
 @dataclass
 class TrainedEngine:
@@ -182,3 +188,22 @@ class TrainedEngine:
             for i in range(len(texts))
         ]
         return Scored(scores.astype(np.float32), evidence)
+
+    # ---- evidence ---------------------------------------------------------------------
+    def passage_scores(self, passages: list[str], concept: int) -> np.ndarray:
+        """Contribution of each passage to the concept.
+
+        With a text model: the linear contribution x_passage . w_concept. Without one: cosine
+        between the passage and the centroid of reviewed documents carrying the concept.
+        """
+        assert self.vectorizer is not None and self.pool_x is not None and self.pool_y is not None
+        x = self.vectorizer.transform(passages)
+        model = self.text_models.get(concept)
+        if model is not None:
+            return np.asarray(x @ model.coef_.ravel()).ravel()
+        members = np.flatnonzero(self.pool_y[:, concept])
+        if not len(members):
+            return np.zeros(len(passages))
+        centroid = np.asarray(self.pool_x[members].mean(axis=0)).ravel()
+        norm = np.linalg.norm(centroid)
+        return np.asarray(x @ (centroid / norm if norm else centroid)).ravel()

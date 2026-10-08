@@ -198,7 +198,7 @@ def benchmark_ruslawod(
                 f"auto {v.get('eval_auto_recall')}"
                 for a, v in c.items()
             )
-            + f" | {r['seconds']['total']}s"
+            + f" | evidence {r['evidence']} | {r['seconds']['total']}s"
         )
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(results, ensure_ascii=False, indent=2))

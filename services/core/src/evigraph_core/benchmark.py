@@ -14,6 +14,7 @@ import numpy as np
 from sqlalchemy.orm import Session, sessionmaker
 
 from evigraph_core import catalogs, certification, documents, releases, reviews
+from evigraph_core import evidence as ev
 from evigraph_core.models import Catalog, CertificationStatus, Project
 from evigraph_core.settings import Settings
 
@@ -46,6 +47,7 @@ def run_pilot(
     alphas: tuple[float, ...] = (0.10, 0.05),
     delta: float = 0.1,
     source_system: str = "benchmark",
+    evidence_sample: int = 300,
 ) -> dict:
     t0 = time.perf_counter()
     with factory() as s:
@@ -144,8 +146,40 @@ def run_pilot(
                 }
             )
         result["certifications"][str(a)] = entry
+    result["evidence"] = evidence_faithfulness(
+        engine, evaluation, scores, y, sample=evidence_sample
+    )
     result["seconds"] = {
         "ingest_and_review": round(t_ingest),
         "total": round(time.perf_counter() - t0),
     }
     return result
+
+
+def evidence_faithfulness(engine, evaluation: list[Doc], scores, y, *, sample: int) -> dict:
+    """Deletion test on correct top suggestions: removing the two evidence passages should lower
+    the concept's score more than removing two random passages of the same document."""
+    rng = np.random.default_rng(0)
+    drops, random_drops, wins = [], [], 0
+    for i in rng.permutation(len(evaluation))[:sample]:
+        j = int(np.argmax(scores[i]))
+        if not y[i, j]:
+            continue
+        text = evaluation[i].text
+        passages = ev.segment(text)
+        spans = ev.select_spans(engine, text, j, max_spans=2)
+        if len(passages) < 4 or not spans:
+            continue
+        picks = rng.choice(len(passages), size=len(spans), replace=False)
+        rand = [ev.Span(passages[p][0], passages[p][1], 0.0) for p in picks]
+        d, r = ev.deletion_drop(engine, text, j, spans), ev.deletion_drop(engine, text, j, rand)
+        drops.append(d)
+        random_drops.append(r)
+        wins += d > r
+    n = len(drops)
+    return {
+        "documents": n,
+        "mean_drop_evidence": round(float(np.mean(drops)), 4) if n else None,
+        "mean_drop_random": round(float(np.mean(random_drops)), 4) if n else None,
+        "share_evidence_beats_random": round(wins / n, 4) if n else None,
+    }

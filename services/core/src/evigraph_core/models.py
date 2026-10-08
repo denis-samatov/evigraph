@@ -262,3 +262,25 @@ class AuditSample(Timestamped, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
     assertion_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("assertions.id"), unique=True)
     certification_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("certifications.id"))
+
+
+class EvidenceSpan(Timestamped, Base):
+    """An exact quote [start, end) of a document version supporting an assertion.
+
+    Offsets are Unicode code points into the version's canonical text; quote_sha256 lets every
+    read verify that the quote still matches the text.
+    """
+
+    __tablename__ = "evidence_spans"
+    __table_args__ = (UniqueConstraint("assertion_id", "release_id", "rank"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=_uuid)
+    assertion_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("assertions.id"))
+    release_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("releases.id"))
+    document_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("document_versions.id"))
+    start: Mapped[int] = mapped_column(Integer)
+    end: Mapped[int] = mapped_column(Integer)
+    quote_sha256: Mapped[str] = mapped_column(String(64))
+    score: Mapped[float] = mapped_column(Float)
+    rank: Mapped[int] = mapped_column(Integer)
+    method: Mapped[str] = mapped_column(String(100))
+    deletion_drop: Mapped[float | None] = mapped_column(Float)
