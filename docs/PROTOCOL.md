@@ -252,6 +252,52 @@ Made on 2026-10-08, before `final_test` was opened, in response to the review in
   where `risk_cert` stands in for `final_test` and the feature path is checked against the
   certification-time features.
 
+# Part 5. Protocol 4.0: copy detection under edits (H3) and re-certification under drift (H4)
+
+Registered on 2026-10-09, after the protocol 3.0 results and before any run of this protocol.
+Parameters in [`protocol_v4.py`](../research/src/evigraph_research/protocol_v4.py). The
+`final_test` labels were seen in aggregate in protocol 3.0 and are used again here.
+
+## 18. H3: does a better copy detector close the gap left by edited copies?
+
+Protocol 3.0 showed that provenance-aware kNN fails once copies are edited (5% of tokens
+deleted: MinHash attributes 2.5% of copies). We compare three attribution methods, each
+applied to a copy's candidate source, which is its nearest train document by TF-IDF cosine
+among the source and the source's 200 nearest train documents:
+
+| Method | Score | Threshold |
+|---|---|---|
+| MinHash | Jaccard of word 5-grams | 0.8 (protocols 2.x) |
+| Cosine | TF-IDF cosine | 0.92 |
+| Containment | share of the copy's word types present in the candidate (Broder, 1997) | 0.98 |
+
+The thresholds were set from genuine documents only. On `risk_cert` the largest cosine of a
+document to its nearest train document is 0.909 and the largest containment is 0.968; each
+threshold is the next round value above the maximum. No risk result was looked at.
+
+Scenario: 100 copies of the source of each of 500 targets; edits are deletion of a share of
+tokens or substitution with tokens drawn from train texts, at 1, 5, 10, 20, 30 and 50%.
+Primary targets: 500 `final_test` documents that were not protocol 3.0 targets (seed 10).
+Secondary: the protocol 2.1 `risk_cert` targets.
+
+**Rule H3** (per seed, confirmed with 3 of 3): for deletion at every rate, the upper bound of
+the 95% source-clustered interval of the change in targeted risk of provenance kNN with
+containment attribution is at most 1 pp. Attribution rates, the harm to naive kNN, and every
+method under substitution are reported without a rule.
+
+## 19. H4: does re-certification on a recent labelled audit restore the guarantee?
+
+`final_test` is split by date. Acts published before 2014-01-01 form the audit pool (2,203);
+acts from 2014-01-01 on form the evaluation period (2,797). For N ∈ {250, 500, 1000, 2000},
+20 random audit samples are drawn from the audit pool. The threshold is re-certified on each
+sample (same grid, δ = 0.1, α ∈ {0.10, 0.05}). We report realised risk and AutoRecall on the
+evaluation period for the original certificate and for each re-certification, for T1 and C1.
+
+**Rule H4** (per seed, 3 of 3): for C1 at N = 1000 and α = 0.10, the share of audit draws whose
+realised risk on the evaluation period exceeds α is at most 0.2. Under exchangeability LTT
+guarantees at most δ = 0.1; the margin allows for Monte Carlo error with 20 draws and for drift
+inside `final_test`.
+
 ## History
 
 | Version | Date | Change |
@@ -264,3 +310,4 @@ Made on 2026-10-08, before `final_test` was opened, in response to the review in
 | — | 2026-10-08 | document translated from Russian to English; no change in substance (the Russian original is in the git history) |
 | 3.0 | 2026-10-08 | part 4: single evaluation on `final_test` with three LEGAL-BERT seeds; registered before `final_test` was opened |
 | 3.0 | 2026-10-08 | section 17: amendment after an independent review, before `final_test` was opened (edited copies reported, source-clustered bootstrap, marginal risk, pool specified) |
+| 4.0 | 2026-10-09 | part 5: copy detection under edits (H3) and re-certification from a recent audit (H4); registered after the 3.0 results and before any 4.0 run |
