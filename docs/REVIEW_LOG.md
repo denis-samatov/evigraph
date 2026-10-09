@@ -16,7 +16,7 @@ negative and replication study; main track — reject.
 | # | Finding | Response | Status |
 |---|---|---|---|
 | 1 | H2b (provenance kNN invariant) and H2d (graph unaffected) hold **by construction** for exact copies; pre-registering them adds no evidence about data | Paper reframed: contribution is a measured failure mode and where a simple fix works; "provably neutralises" removed; §5 states the by-construction nature | fixed in paper |
-| 2 | The only non-trivial case — edited copies — fails (5% deletion: MinHash attributes 2.9% of copies) | Stated as the main limitation; protocol 3.0 now reports edited copies on `final_test`; similarity-based collapse of candidates is the next experiment | partly addressed, experiment pending |
+| 2 | The only non-trivial case — edited copies — fails (5% deletion: MinHash attributes 2.9% of copies) | Protocol 3.0 reports edited copies on `final_test`; protocol 4.0 adds word-containment attribution, which closes the deletion gap (H3 met 3/3); substitution of 5–30% remains undetected yet harmful | mostly addressed |
 | 3 | Targets are chosen to be affected, LTT bounds marginal risk | Marginal risk added: over all risk_cert documents, naive kNN goes from 8.7% to 13.8% (still > α); protocol 3.0 reports marginal risk | fixed |
 | 4 | H2 measured on risk_cert, the certification split itself (clean risk is in-sample) | Stated in §5; protocol 3.0 repeats the scenario on `final_test` targets | fixed by 3.0 |
 | 5 | Clopper–Pearson over dependent pairs | Sensitivity added: the certified C1 bound stays below α even with a 5× smaller effective sample (UCB 0.091 → 0.096); a document-level bound remains future work | partly addressed |
@@ -28,7 +28,7 @@ negative and replication study; main track — reject.
 | 11 | "Neighbours published before" enforced for neighbour text, not graph votes; hub sizes and dedup use `final_test` texts | Stated in Limitations (no labels involved; no effect under the chronological split) | documented |
 | 12 | Weighted-conformal comparison is unfavourable to the baseline (moves τ only, Kish heuristic, detector iterated after a null result, one seed) | Caveats were in the report; the paper now presents it as exploratory and lists them | documented |
 | 13 | Missing prior work: copy detection in truth discovery, certified kNN / RAG robustness, diversity re-ranking, RCPS, adaptive conformal | Added to Related work (Dong et al. 2009; Jia et al. 2022; Xiang et al. 2024; Carbonell & Goldstein 1998; Bates et al. 2021; Gibbs & Candès 2021) | fixed |
-| 14 | Missing baselines: index-time dedup, MMR, per-cluster cap, audit-based re-certification | Listed in Limitations; not run | open |
+| 14 | Missing baselines: index-time dedup, MMR, per-cluster cap, audit-based re-certification | Audit-based re-certification evaluated in protocol 4.0 (H4: restores α = 0.10 with ~1,000 recent labels); the other three not run | partly addressed |
 | 15 | Protocol 3.0 gaps: no noise conditions, pool unspecified, no runner, no clustered bootstrap, interpretation if F1 fails | Amendment §17 made before opening; runner `final.py` committed with a dry run | fixed |
 | 16 | k = 20 saturation: at m ≥ 20 naive kNN becomes 1-NN (m = 30 and 100 coincide) | Stated in §5 | documented |
 | 17 | Registrations are self-timestamped git commits, no third-party registry | Acknowledged; future protocols can be deposited on OSF before running | open |

@@ -31,7 +31,11 @@ was run; the held-out test period was opened once, in protocol 3.0 ([results](re
 4. **Certificates do not transfer in time.** On the held-out period (2012–2016, three seeds),
    policies certified at α = 10% on 2010–2012 acts run at 10.7–12.3% risk; findings 1–3
    replicate there ([protocol 3.0](research/reports/PROTOCOL_V3_RESULTS.md)).
-5. **Strong text is the main lever:** at α = 5% automation grows from 4.9% (TF-IDF) to 34.3%
+5. **Re-certification on ~1,000 recent labelled documents restores α = 10%**, and word
+   containment detects deleted copies at any deletion rate. Moderate token substitution
+   (5–30%) evades every detector tested yet still raises risk
+   ([protocol 4.0](research/reports/PROTOCOL_V4_RESULTS.md)).
+6. **Strong text is the main lever:** at α = 5% automation grows from 4.9% (TF-IDF) to 34.3%
    (LEGAL-BERT + kNN).
 
 ![Realised risk under source duplication](research/reports/figures/risk_vs_copies.png)

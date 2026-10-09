@@ -59,9 +59,11 @@ neighbourhood — and nothing in the deployed system signals it.
    detector attributes to their source (trivially so for exact copies), and the limit of the
    fix is the copy detector (§5).
 4. A methodological note: percentile bootstrap intervals of a *certified* AutoRecall are
-   biased downwards because of the fixed-sequence stopping rule (§7).
+   biased downwards because of the fixed-sequence stopping rule (§8).
 5. A single held-out evaluation with three seeds that replicates both findings and shows that
-   certificates do not transfer across a two-to-six-year gap (§6).
+   certificates do not transfer across a two-to-six-year gap (§6). Re-certification on about
+   1,000 recent labelled documents restores α = 0.10. Word containment closes the deletion
+   gap of copy detection. Moderate token substitution remains undetected yet harmful (§7).
 
 ## 2. Data
 
@@ -136,7 +138,7 @@ The pre-registered rule (graph better than the controls in all three contrasts, 
 bound > 0) is not met. G1 − C1 = −0.9 pp with interval [−7.0, −0.5] pp, and G2 − C1 =
 −2.2 pp [−6.0, −1.6]: adding the graph makes certified automation *lower* than retrieval
 alone. These intervals come from bootstrapping a certified quantity, which is biased
-downwards (§7); the point estimates point the same way. On the secondary metric (model_dev
+downwards (§8); the point estimates point the same way. On the secondary metric (model_dev
 mRP, out-of-fold) G2 is the best system (+1.4 to +2.0 pp over C1), so better ranking does not
 translate into more certified automation. The graph helps the strong text model (+4.8 pp over
 T1), but the same label information is available from retrieval. A strong text model is the main lever:
@@ -240,14 +242,38 @@ MinHash attributes 98.8% of copies and provenance kNN stays at its clean risk. W
 attributes 2.5% and provenance kNN rises to 19.6%, like naive kNN. All four rules hold in
 three of three seeds.
 
-## 7. Methodological note: bootstrapping a certified quantity
+## 7. Closing the gaps: copy detection and re-certification (protocol 4.0)
+
+A further pre-registered protocol tested two follow-ups (`PROTOCOL_V4_RESULTS.md`). The
+`final_test` labels were reused and the paper says so.
+
+**H3, copy detection under edits.** We compare three ways to attribute a copy to its candidate
+source, the nearest train document. All thresholds were set from genuine risk_cert
+documents only. The methods are MinHash Jaccard of 5-grams (≥ 0.8), TF-IDF cosine (≥ 0.92) and
+word containment (≥ 0.98), the share of the copy's word types found in the candidate (Broder,
+1997). Containment attributes deleted copies at every deletion rate up to 50% (≥ 99%) and keeps
+provenance kNN within +0.4 pp of its clean risk in three of three seeds. MinHash and cosine fail
+from 5% and 10% deletion respectively. Substituting 5–30% of tokens defeats all three methods
+(≤ 11% attribution), yet such copies still raise naive kNN's targeted risk by +1 to +5 pp.
+Only around 50% substitution do copies stop mattering. This danger zone is the remaining open
+problem.
+
+**H4, re-certification from a recent audit.** `final_test` was split at 2014-01-01. The
+threshold was re-certified on 20 random audit samples of N acts from the earlier part and
+applied to the later part. At α = 0.10, C1's realised risk falls from 12.0–12.1% (original
+certificate) to 8.6–8.9% at N = 1,000. At most 5% of draws exceed α in every seed (rule met
+3/3), and AutoRecall falls from about 46% to about 36%. At α = 0.05 a one-off audit is not
+enough: the residual drift between audit and evaluation periods consumes the margin (C1 at
+4.8–5.5%, 15–95% of draws above α).
+
+## 8. Methodological note: bootstrapping a certified quantity
 
 Percentile bootstrap intervals for certified AutoRecall are skewed: point estimates sit near
 the upper end (e.g. 55.4% with interval 48.9–56.3%). Under resampling, any spurious failure
 on the threshold path stops the fixed sequence early, so resampled AutoRecall is biased down.
 Protocol 2.x therefore evaluates realised risk at a fixed certified threshold.
 
-## 8. Related work
+## 9. Related work
 
 *Distribution-free risk control.* LTT (Angelopoulos et al., 2025) and conformal risk control
 (Angelopoulos et al., 2024) certify thresholds under exchangeability; selective
@@ -282,7 +308,7 @@ neural scores (Guo et al., 2017) motivates certifying on raw scores rather than 
 recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation (Lebo et al.,
 2013). Evidence faithfulness for the product follows ERASER (DeYoung et al., 2020).
 
-## 9. Limitations
+## 10. Limitations
 
 * **Pair dependence.** Clopper–Pearson treats (document, concept) pairs as independent; they
   are nested in documents and in template families. For the certified C1 threshold
@@ -296,11 +322,11 @@ recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation 
 * **The duplication is injected and targeted.** Natural cross-split copying is 0.04–0.06%.
   The scenario copies each target's nearest neighbour, the worst case for kNN. A realistic
   duplication process (template families, consolidated versions, paraphrases) and a curve of
-  detection rate vs. edit level are future work; at 5% token deletion MinHash detection
-  already fails, and a similarity-based collapse of retrieved candidates may close that gap.
-* **Missing baselines:** index-time deduplication, diversity re-ranking, per-cluster vote
-  caps, and periodic re-certification from a small labelled audit (the latter exists in the
-  EviGraph Core service but is not evaluated here).
+  detection rate vs. edit level was measured in §7 with synthetic deletions and random
+  substitutions; real paraphrases may behave differently.
+* **Missing baselines:** index-time deduplication, diversity re-ranking and per-cluster vote
+  caps. Re-certification from a labelled audit is evaluated in §7, but only as a one-off
+  audit, not a rolling one.
 * **Transductive preprocessing.** Duplicate detection, split groups and hub sizes use the texts
   and links of all documents, `final_test` included (not their labels). The rule that graph
   neighbours are published before the document is enforced for the neighbour-text control
@@ -308,7 +334,7 @@ recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation 
 * One corpus; three LEGAL-BERT seeds share one test set; LEGAL-BERT was pre-trained on EUR-Lex
   text (no labels).
 
-## 10. Reproducibility
+## 11. Reproducibility
 
 `make all` rebuilds data, splits and baselines; `evigraph-research strong-text`,
 `compare`, `h2 --version 2.0|2.1` and `python -m evigraph_research.figures` reproduce every
