@@ -22,7 +22,10 @@ that the detector recognises — by construction for exact copies — at no cost
 but not of edited copies that MinHash misses; and (iv) identifier-based citation links are
 unaffected because copies receive no incoming links. We read this as a measured failure mode
 of retrieval-based certified tagging and a mapping of where a simple fix works, not as a new
-robustness guarantee.
+robustness guarantee. A single pre-registered evaluation on the held-out test period
+(2012–2016, three LEGAL-BERT seeds) replicates both findings and adds a third: certificates
+computed on 2010–2012 acts do not transfer in time. The realised risk of policies certified at
+10% is 10.7–12.3% on later acts, while only the weakest (TF-IDF) system stays within α.
 
 ## 1. Introduction
 
@@ -56,7 +59,9 @@ neighbourhood — and nothing in the deployed system signals it.
    detector attributes to their source (trivially so for exact copies), and the limit of the
    fix is the copy detector (§5).
 4. A methodological note: percentile bootstrap intervals of a *certified* AutoRecall are
-   biased downwards because of the fixed-sequence stopping rule (§6).
+   biased downwards because of the fixed-sequence stopping rule (§7).
+5. A single held-out evaluation with three seeds that replicates both findings and shows that
+   certificates do not transfer across a two-to-six-year gap (§6).
 
 ## 2. Data
 
@@ -131,7 +136,7 @@ The pre-registered rule (graph better than the controls in all three contrasts, 
 bound > 0) is not met. G1 − C1 = −0.9 pp with interval [−7.0, −0.5] pp, and G2 − C1 =
 −2.2 pp [−6.0, −1.6]: adding the graph makes certified automation *lower* than retrieval
 alone. These intervals come from bootstrapping a certified quantity, which is biased
-downwards (§6); the point estimates point the same way. On the secondary metric (model_dev
+downwards (§7); the point estimates point the same way. On the secondary metric (model_dev
 mRP, out-of-fold) G2 is the best system (+1.4 to +2.0 pp over C1), so better ranking does not
 translate into more certified automation. The graph helps the strong text model (+4.8 pp over
 T1), but the same label information is available from retrieval. A strong text model is the main lever:
@@ -213,14 +218,36 @@ as a later period. α = 10% certifies from about 500 reviewed acts and α = 5% f
 In every certified configuration, across both catalog levels (21 sections and 132 rubrics),
 the realised risk on the later acts stayed below α (1.4–7.2%).
 
-## 6. Methodological note: bootstrapping a certified quantity
+## 6. Final evaluation on the held-out period (protocol 3.0)
+
+`final_test` (5,000 acts, 2012-08 to 2016-01) was opened once, after the runner was frozen and
+dry-run on risk_cert (`research/reports/PROTOCOL_V3_RESULTS.md`). Three LEGAL-BERT seeds.
+
+**F1, the certificate under temporal drift.** At α = 0.10 the realised risk on `final_test`
+is 10.7–12.3% for T1, C1, C1p, G1 and G1p, with the lower interval bound above α in 13 of 15
+system × seed cases. Ranking quality drops (mRP 0.75 → 0.70) and certified automation shrinks
+(C1: 56% → 48%). TF-IDF stays at 9.8%. At α = 0.05, T1, C1 and C1p stay below α in every seed
+(3.2–4.7%), while C2 and G2 do not (5.5–6.8%). A certificate holds for the period it was
+computed on; deployment needs labelled audits and re-certification.
+
+**F2, H1 replicated.** G1 − C1 is negative in every seed (−1.2 to −6.5 pp, all intervals
+below zero); the graph beats only the neighbour-text control.
+
+**F3, H2 replicated out of sample.** On 500 `final_test` targets, 100 exact copies raise
+naive kNN's targeted risk from 12.2% to 20.5% (17.3–24.0%; seeds agree within 0.2 pp). They
+leave provenance kNN unchanged and move the graph by +0.2 pp. With 1% of tokens deleted,
+MinHash attributes 98.8% of copies and provenance kNN stays at its clean risk. With 5%, it
+attributes 2.5% and provenance kNN rises to 19.6%, like naive kNN. All four rules hold in
+three of three seeds.
+
+## 7. Methodological note: bootstrapping a certified quantity
 
 Percentile bootstrap intervals for certified AutoRecall are skewed: point estimates sit near
 the upper end (e.g. 55.4% with interval 48.9–56.3%). Under resampling, any spurious failure
 on the threshold path stops the fixed sequence early, so resampled AutoRecall is biased down.
 Protocol 2.x therefore evaluates realised risk at a fixed certified threshold.
 
-## 7. Related work
+## 8. Related work
 
 *Distribution-free risk control.* LTT (Angelopoulos et al., 2025) and conformal risk control
 (Angelopoulos et al., 2024) certify thresholds under exchangeability; selective
@@ -255,7 +282,7 @@ neural scores (Guo et al., 2017) motivates certifying on raw scores rather than 
 recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation (Lebo et al.,
 2013). Evidence faithfulness for the product follows ERASER (DeYoung et al., 2020).
 
-## 8. Limitations
+## 9. Limitations
 
 * **Pair dependence.** Clopper–Pearson treats (document, concept) pairs as independent; they
   are nested in documents and in template families. For the certified C1 threshold
@@ -278,10 +305,10 @@ recalibrated ones. Provenance groups follow the W3C PROV-O notion of derivation 
   and links of all documents, `final_test` included (not their labels). The rule that graph
   neighbours are published before the document is enforced for the neighbour-text control
   but not for graph votes; under the chronological split this has no effect.
-* One corpus and, until protocol 3.0, one LEGAL-BERT seed; LEGAL-BERT was pre-trained on
-  EUR-Lex text (no labels); `final_test` has not been opened.
+* One corpus; three LEGAL-BERT seeds share one test set; LEGAL-BERT was pre-trained on EUR-Lex
+  text (no labels).
 
-## 9. Reproducibility
+## 10. Reproducibility
 
 `make all` rebuilds data, splits and baselines; `evigraph-research strong-text`,
 `compare`, `h2 --version 2.0|2.1` and `python -m evigraph_research.figures` reproduce every
