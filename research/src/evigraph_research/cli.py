@@ -95,5 +95,13 @@ def final(*, dry_run: bool = False) -> None:
     mod.run(dry_run=dry_run, seeds=(0,) if dry_run else mod.cfg.SEEDS)
 
 
+@app.command()
+def v4() -> None:
+    """Protocol 4.0: copy detection under edits (H3) and re-certification under drift (H4)."""
+    from evigraph_research import v4 as mod
+
+    mod.run()
+
+
 def main() -> None:
     app()
