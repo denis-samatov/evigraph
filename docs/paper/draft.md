@@ -258,6 +258,8 @@ from 5% and 10% deletion respectively. Substituting 5–30% of tokens defeats al
 Only around 50% substitution do copies stop mattering. This danger zone is the remaining open
 problem.
 
+![Copy detection under edits](../../research/reports/figures/detection_curve.png)
+
 **H4, re-certification from a recent audit.** `final_test` was split at 2014-01-01. The
 threshold was re-certified on 20 random audit samples of N acts from the earlier part and
 applied to the later part. At α = 0.10, C1's realised risk falls from 12.0–12.1% (original

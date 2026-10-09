@@ -126,6 +126,66 @@ def automation_frontier() -> None:
     _save(fig, "automation_frontier")
 
 
+def detection_curve() -> None:
+    """Protocol 4.0, H3: attribution and harm vs edit level (final_test targets, seed 0)."""
+    r = orjson.loads((paths.REPORTS / "protocol_v4_results.json").read_bytes())
+    h3 = r["h3"]["final_test"]
+    attribution = {(a["kind"], a["rate"]): a for a in h3["attribution"]}
+    table = h3["seeds"]["0"]["table"]
+    methods = {
+        "minhash": ("MinHash", MUTED, ":"),
+        "cosine": ("cosine", ORANGE, "--"),
+        "containment": ("containment", BLUE, "-"),
+    }
+    fig, axes = plt.subplots(2, 2, figsize=(8, 5.2), sharex=True, sharey="row")
+    for col, (kind, title) in enumerate((("del", "tokens deleted"), ("sub", "tokens substituted"))):
+        rates = sorted(rt for k, rt in attribution if k == kind)
+        top, bottom = axes[0, col], axes[1, col]
+        for m, (label, colour, ls) in methods.items():
+            top.plot(
+                rates,
+                [attribution[kind, rt][m]["attributed"] for rt in rates],
+                color=colour,
+                linestyle=ls,
+                marker="o",
+                markersize=3,
+                label=label,
+            )
+            change = [
+                next(
+                    t["risk_change"]
+                    for t in table
+                    if (t["kind"], t["rate"], t["system"], t["attribution"])
+                    == (kind, rt, "C1p_strong+knn_prov", m)
+                )
+                for rt in rates
+            ]
+            bottom.plot(rates, change, color=colour, linestyle=ls, marker="o", markersize=3)
+        naive = [
+            next(
+                t["risk_change"]
+                for t in table
+                if (t["kind"], t["rate"], t["system"]) == (kind, rt, "C1_strong+knn")
+            )
+            for rt in rates
+        ]
+        bottom.plot(rates, naive, color=INK, linewidth=2.2, alpha=0.25, label="naive kNN (harm)")
+        top.set_title(title, fontsize=9, color=INK)
+        bottom.set_xlabel("edit level", fontsize=8, color=INK_2)
+        bottom.set_xscale("log")
+        for ax in (top, bottom):
+            _style(ax)
+            ax.xaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
+        top.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
+        bottom.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
+    axes[0, 0].set_ylabel("copies attributed", fontsize=8, color=INK_2)
+    axes[1, 0].set_ylabel("change in targeted risk", fontsize=8, color=INK_2)
+    axes[0, 0].legend(fontsize=7, frameon=False)
+    axes[1, 0].legend(fontsize=7, frameon=False)
+    fig.tight_layout()
+    _save(fig, "detection_curve")
+
+
 def _save(fig, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "svg"):
@@ -137,3 +197,5 @@ def _save(fig, name: str) -> None:
 if __name__ == "__main__":
     risk_vs_copies(sys.argv[1] if len(sys.argv) > 1 else "h2_results.json")
     automation_frontier()
+    if (paths.REPORTS / "protocol_v4_results.json").exists():
+        detection_curve()
