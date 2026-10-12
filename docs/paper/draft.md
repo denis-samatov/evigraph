@@ -268,6 +268,15 @@ certificate) to 8.6–8.9% at N = 1,000. At most 5% of draws exceed α in every 
 enough: the residual drift between audit and evaluation periods consumes the margin (C1 at
 4.8–5.5%, 15–95% of draws above α).
 
+**H5, rolling re-certification** (protocol 4.1, `PROTOCOL_V41_RESULTS.md`). The threshold is
+re-certified every quarter on the acts of the preceding six months, over six evaluation
+quarters (2013Q4–2015Q1). At α = 0.10 the original certificate exceeds α in every quarter
+(pooled 12.1%); every re-certification scheme brings it to 8.2–9.3%. At α = 0.05 the rolling
+6-month scheme has a pooled risk of 4.1–4.2% (rule met 3/3) and exceeds α in 1–2 of 6
+quarters. The original certificate, the one-off audit and a 12-month window exceed α in 2–4
+quarters. The rule is weakly discriminating: the original certificate's pooled risk is also
+below 5% (4.4–5.0%). Recency matters more than volume. Quarterly exceedances at a tight α remain.
+
 ## 8. Methodological note: bootstrapping a certified quantity
 
 Percentile bootstrap intervals for certified AutoRecall are skewed: point estimates sit near

@@ -31,7 +31,9 @@ was run; the held-out test period was opened once, in protocol 3.0 ([results](re
 4. **Certificates do not transfer in time.** On the held-out period (2012–2016, three seeds),
    policies certified at α = 10% on 2010–2012 acts run at 10.7–12.3% risk; findings 1–3
    replicate there ([protocol 3.0](research/reports/PROTOCOL_V3_RESULTS.md)).
-5. **Re-certification on ~1,000 recent labelled documents restores α = 10%**, and word
+5. **Re-certification on ~1,000 recent labelled documents restores α = 10%**; quarterly
+   re-certification on the last six months keeps α = 5% pooled, though not in every quarter
+   ([protocol 4.1](research/reports/PROTOCOL_V41_RESULTS.md)). Word
    containment detects deleted copies at any deletion rate. Moderate token substitution
    (5–30%) evades every detector tested yet still raises risk
    ([protocol 4.0](research/reports/PROTOCOL_V4_RESULTS.md)).
