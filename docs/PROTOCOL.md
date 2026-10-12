@@ -298,6 +298,35 @@ realised risk on the evaluation period exceeds α is at most 0.2. Under exchange
 guarantees at most δ = 0.1; the margin allows for Monte Carlo error with 20 draws and for drift
 inside `final_test`.
 
+# Part 6. Protocol 4.1: rolling re-certification under drift (H5)
+
+Registered on 2026-10-12, after the protocol 4.0 results and before any run of this protocol.
+Parameters in [`protocol_v41.py`](../research/src/evigraph_research/protocol_v41.py). Protocol
+4.0 found that a one-off audit restores α = 0.10 but not α = 0.05. This protocol asks whether
+re-certifying every quarter on the most recent acts does.
+
+## 20. Schemes and evaluation
+
+`final_test` acts are grouped by calendar quarter. The evaluation quarters are 2013Q4 to
+2015Q1: the quarters with at least 300 acts and a full 12-month history inside `final_test`
+(six quarters). For each evaluation quarter, a scheme sets a threshold from acts published
+before the quarter; the threshold is then applied to the quarter's acts.
+
+| Scheme | Threshold for a quarter certified on |
+|---|---|
+| original | `risk_cert` (protocol 3.0), never updated |
+| one-off | every act published before 2013-10-01, once |
+| rolling 6 months | every act of the preceding 6 months |
+| rolling 12 months | every act of the preceding 12 months |
+| rolling 6 months, sample | 500 random acts of the preceding 6 months (20 draws) |
+
+Systems T1 and C1 of protocol 4.0, three seeds, α ∈ {0.10, 0.05}, δ = 0.1, the same grid.
+Reported: pooled realised risk and AutoRecall over the evaluation quarters, risk per quarter,
+the number of quarters above α and of quarters without a certified threshold.
+
+**Rule H5** (per seed, 3 of 3): for C1 at α = 0.05, the pooled realised risk of the rolling
+6-month scheme over the evaluation quarters is at most α.
+
 ## History
 
 | Version | Date | Change |
@@ -311,3 +340,4 @@ inside `final_test`.
 | 3.0 | 2026-10-08 | part 4: single evaluation on `final_test` with three LEGAL-BERT seeds; registered before `final_test` was opened |
 | 3.0 | 2026-10-08 | section 17: amendment after an independent review, before `final_test` was opened (edited copies reported, source-clustered bootstrap, marginal risk, pool specified) |
 | 4.0 | 2026-10-09 | part 5: copy detection under edits (H3) and re-certification from a recent audit (H4); registered after the 3.0 results and before any 4.0 run |
+| 4.1 | 2026-10-12 | part 6: rolling re-certification under drift (H5); registered after the 4.0 results and before any 4.1 run |
