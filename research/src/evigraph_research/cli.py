@@ -103,5 +103,13 @@ def v4() -> None:
     mod.run()
 
 
+@app.command()
+def rolling() -> None:
+    """Protocol 4.1: rolling re-certification under temporal drift (H5)."""
+    from evigraph_research import rolling as mod
+
+    mod.run()
+
+
 def main() -> None:
     app()

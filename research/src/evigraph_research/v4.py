@@ -8,6 +8,8 @@ exact-copy scenario on the protocol 2.1 risk_cert targets must reproduce the 2.1
 import os
 import re
 import time
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 import joblib
@@ -55,13 +57,33 @@ def _clustered_boots(members: list[np.ndarray], rng: np.random.Generator) -> lis
     ]
 
 
-def run() -> dict:
-    timer = Timer()
+@dataclass
+class Prepared:
+    fr: pd.DataFrame
+    y: np.ndarray
+    n_lab: int
+    texts: list[str]
+    train_idx: np.ndarray
+    y_train: np.ndarray
+    prior: np.ndarray
+    rc: np.ndarray
+    ft: np.ndarray
+    groups_train: np.ndarray
+    x_train: sp.csr_matrix
+    tf: Any
+    base: dict[str, dict]
+    query: Callable[[np.ndarray], sp.csr_matrix]
+    fitted: dict[int, dict[str, dict]]
+    n_jobs: int
+
+
+def prepare(reason: str, timer: Timer) -> Prepared:
+    """Features and certified systems of every seed; opens final_test (logged)."""
     n_jobs = max(1, (os.cpu_count() or 2) - 1)
     with timer.stage("load"):
         ds = dataset.load(with_text=True)
         protocol.assert_manifest(ds.frame)
-        protocol.open_final_test("protocol 4.0 (H3 targets, H4 audit and evaluation)")
+        protocol.open_final_test(reason)
         dups = pd.read_parquet(paths.DUPLICATES).set_index("celex_id")
     fr, y, n_lab = ds.frame, ds.y, len(ds.labels)
     celex = fr["celex_id"].tolist()
@@ -155,6 +177,33 @@ def run() -> dict:
                     "s_ft": s_ft.reshape(len(ft), n_lab),
                     "p_strong": p_strong,
                 }
+    return Prepared(
+        fr=fr,
+        y=y,
+        n_lab=n_lab,
+        texts=texts,
+        train_idx=train_idx,
+        y_train=y_train,
+        prior=prior,
+        rc=rc,
+        ft=ft,
+        groups_train=groups_train,
+        x_train=x_train,
+        tf=tf,
+        base=base,
+        query=query,
+        fitted=fitted,
+        n_jobs=n_jobs,
+    )
+
+
+def run() -> dict:
+    timer = Timer()
+    p = prepare("protocol 4.0 (H3 targets, H4 audit and evaluation)", timer)
+    fr, y, n_lab, texts = p.fr, p.y, p.n_lab, p.texts
+    train_idx, y_train, prior, rc, ft = p.train_idx, p.y_train, p.prior, p.rc, p.ft
+    groups_train, x_train, tf, base = p.groups_train, p.x_train, p.tf, p.base
+    query, fitted, n_jobs = p.query, p.fitted, p.n_jobs
 
     results: dict[str, Any] = {"protocol": cfg.PROTOCOL_VERSION, "checks": {}}
     with timer.stage("h4"):
