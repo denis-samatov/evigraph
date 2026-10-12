@@ -1,0 +1,781 @@
+{
+  "protocol": "4.2",
+  "model": "deepseek-flash",
+  "plan": {
+    "sources": 344,
+    "calls_needed": 0,
+    "calls_cached": 3440,
+    "input_chars": 0,
+    "estimated_tokens_in_out": 0
+  },
+  "generation": {
+    "prompt_tokens": 3009030,
+    "completion_tokens": 2807073,
+    "models_reported": [
+      "deepseek-flash"
+    ],
+    "finish_reasons": {
+      "stop": 3440
+    },
+    "variants_reused_for_failed_generations": {
+      "paraphrase_light": 0,
+      "paraphrase_full": 0
+    }
+  },
+  "checks": {
+    "exact_reproduces_protocol_40": 0.2064
+  },
+  "h6": {
+    "targets": 500,
+    "distinct_sources": 344,
+    "attribution": [
+      {
+        "kind": "exact",
+        "rate": 0.0,
+        "minhash": {
+          "attributed": 1.0,
+          "attributed_to_source_group": 1.0
+        },
+        "cosine": {
+          "attributed": 1.0,
+          "attributed_to_source_group": 1.0
+        },
+        "containment": {
+          "attributed": 1.0,
+          "attributed_to_source_group": 1.0
+        },
+        "median_cosine": 1.0
+      },
+      {
+        "kind": "truncated",
+        "rate": 0.0,
+        "minhash": {
+          "attributed": 0.689,
+          "attributed_to_source_group": 0.689
+        },
+        "cosine": {
+          "attributed": 0.6948,
+          "attributed_to_source_group": 0.6948
+        },
+        "containment": {
+          "attributed": 0.9942,
+          "attributed_to_source_group": 0.9942
+        },
+        "median_cosine": 1.0
+      },
+      {
+        "kind": "paraphrase_light",
+        "rate": 0.0,
+        "minhash": {
+          "attributed": 0.6384,
+          "attributed_to_source_group": 0.6384
+        },
+        "cosine": {
+          "attributed": 0.6721,
+          "attributed_to_source_group": 0.6721
+        },
+        "containment": {
+          "attributed": 0.7686,
+          "attributed_to_source_group": 0.7686
+        },
+        "median_cosine": 0.966
+      },
+      {
+        "kind": "paraphrase_full",
+        "rate": 0.0,
+        "minhash": {
+          "attributed": 0.1122,
+          "attributed_to_source_group": 0.1122
+        },
+        "cosine": {
+          "attributed": 0.1285,
+          "attributed_to_source_group": 0.1285
+        },
+        "containment": {
+          "attributed": 0.1535,
+          "attributed_to_source_group": 0.1535
+        },
+        "median_cosine": 0.736
+      }
+    ],
+    "seeds": {
+      "0": {
+        "clean_risk_targets": {
+          "T1_strong": 0.1046,
+          "C1_strong+knn": 0.1345,
+          "C1p_strong+knn_prov": 0.1349
+        },
+        "table": [
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2064,
+            "auto_recall_targets": 0.513,
+            "risk_change": 0.0719,
+            "risk_change_ci95": [
+              0.0512,
+              0.0949
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1349,
+            "auto_recall_targets": 0.4793,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1349,
+            "auto_recall_targets": 0.4793,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1349,
+            "auto_recall_targets": 0.4793,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2015,
+            "auto_recall_targets": 0.5061,
+            "risk_change": 0.0669,
+            "risk_change_ci95": [
+              0.0476,
+              0.0898
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1357,
+            "auto_recall_targets": 0.4812,
+            "risk_change": 0.0007,
+            "risk_change_ci95": [
+              -0.0018,
+              0.0032
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1357,
+            "auto_recall_targets": 0.4812,
+            "risk_change": 0.0007,
+            "risk_change_ci95": [
+              -0.0018,
+              0.0032
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1349,
+            "auto_recall_targets": 0.4793,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              -0.0016,
+              0.0017
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.1965,
+            "auto_recall_targets": 0.5081,
+            "risk_change": 0.0619,
+            "risk_change_ci95": [
+              0.0428,
+              0.0816
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1401,
+            "auto_recall_targets": 0.4847,
+            "risk_change": 0.0052,
+            "risk_change_ci95": [
+              -0.0003,
+              0.0112
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1383,
+            "auto_recall_targets": 0.4827,
+            "risk_change": 0.0033,
+            "risk_change_ci95": [
+              -0.001,
+              0.0082
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1372,
+            "auto_recall_targets": 0.4797,
+            "risk_change": 0.0023,
+            "risk_change_ci95": [
+              -0.0037,
+              0.009
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.1877,
+            "auto_recall_targets": 0.5176,
+            "risk_change": 0.0532,
+            "risk_change_ci95": [
+              0.0358,
+              0.0737
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1341,
+            "auto_recall_targets": 0.49,
+            "risk_change": -0.0008,
+            "risk_change_ci95": [
+              -0.0098,
+              0.0083
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1335,
+            "auto_recall_targets": 0.4904,
+            "risk_change": -0.0015,
+            "risk_change_ci95": [
+              -0.0103,
+              0.0077
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1332,
+            "auto_recall_targets": 0.4889,
+            "risk_change": -0.0017,
+            "risk_change_ci95": [
+              -0.0106,
+              0.0068
+            ]
+          }
+        ]
+      },
+      "1": {
+        "clean_risk_targets": {
+          "T1_strong": 0.1019,
+          "C1_strong+knn": 0.1417,
+          "C1p_strong+knn_prov": 0.1395
+        },
+        "table": [
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2085,
+            "auto_recall_targets": 0.5153,
+            "risk_change": 0.0668,
+            "risk_change_ci95": [
+              0.0482,
+              0.0855
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1395,
+            "auto_recall_targets": 0.4709,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1395,
+            "auto_recall_targets": 0.4709,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1395,
+            "auto_recall_targets": 0.4709,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2062,
+            "auto_recall_targets": 0.5092,
+            "risk_change": 0.0646,
+            "risk_change_ci95": [
+              0.0467,
+              0.083
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1407,
+            "auto_recall_targets": 0.4732,
+            "risk_change": 0.0012,
+            "risk_change_ci95": [
+              -0.0005,
+              0.0037
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1401,
+            "auto_recall_targets": 0.4732,
+            "risk_change": 0.0006,
+            "risk_change_ci95": [
+              -0.0017,
+              0.0032
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1398,
+            "auto_recall_targets": 0.472,
+            "risk_change": 0.0003,
+            "risk_change_ci95": [
+              -0.0004,
+              0.0015
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.205,
+            "auto_recall_targets": 0.5115,
+            "risk_change": 0.0633,
+            "risk_change_ci95": [
+              0.0458,
+              0.0819
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1478,
+            "auto_recall_targets": 0.4774,
+            "risk_change": 0.0084,
+            "risk_change_ci95": [
+              0.0016,
+              0.0154
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1442,
+            "auto_recall_targets": 0.4778,
+            "risk_change": 0.0048,
+            "risk_change_ci95": [
+              -0.0004,
+              0.0105
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1464,
+            "auto_recall_targets": 0.4716,
+            "risk_change": 0.007,
+            "risk_change_ci95": [
+              -0.0019,
+              0.016
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.1937,
+            "auto_recall_targets": 0.5188,
+            "risk_change": 0.052,
+            "risk_change_ci95": [
+              0.0357,
+              0.0696
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1429,
+            "auto_recall_targets": 0.4854,
+            "risk_change": 0.0034,
+            "risk_change_ci95": [
+              -0.0075,
+              0.0141
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1441,
+            "auto_recall_targets": 0.485,
+            "risk_change": 0.0047,
+            "risk_change_ci95": [
+              -0.0058,
+              0.0153
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1427,
+            "auto_recall_targets": 0.4816,
+            "risk_change": 0.0032,
+            "risk_change_ci95": [
+              -0.0076,
+              0.0143
+            ]
+          }
+        ]
+      },
+      "2": {
+        "clean_risk_targets": {
+          "T1_strong": 0.1041,
+          "C1_strong+knn": 0.1343,
+          "C1p_strong+knn_prov": 0.1331
+        },
+        "table": [
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2092,
+            "auto_recall_targets": 0.5146,
+            "risk_change": 0.0749,
+            "risk_change_ci95": [
+              0.0566,
+              0.0951
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1331,
+            "auto_recall_targets": 0.4797,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1331,
+            "auto_recall_targets": 0.4797,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "exact",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1331,
+            "auto_recall_targets": 0.4797,
+            "risk_change": 0.0,
+            "risk_change_ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2052,
+            "auto_recall_targets": 0.505,
+            "risk_change": 0.0709,
+            "risk_change_ci95": [
+              0.0531,
+              0.0899
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1317,
+            "auto_recall_targets": 0.4854,
+            "risk_change": -0.0014,
+            "risk_change_ci95": [
+              -0.0036,
+              0.0006
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1317,
+            "auto_recall_targets": 0.4854,
+            "risk_change": -0.0014,
+            "risk_change_ci95": [
+              -0.0036,
+              0.0006
+            ]
+          },
+          {
+            "kind": "truncated",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1329,
+            "auto_recall_targets": 0.4804,
+            "risk_change": -0.0002,
+            "risk_change_ci95": [
+              -0.0005,
+              0.0
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.2034,
+            "auto_recall_targets": 0.5077,
+            "risk_change": 0.0691,
+            "risk_change_ci95": [
+              0.0511,
+              0.0886
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1402,
+            "auto_recall_targets": 0.4893,
+            "risk_change": 0.0071,
+            "risk_change_ci95": [
+              0.0001,
+              0.0149
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1372,
+            "auto_recall_targets": 0.487,
+            "risk_change": 0.0042,
+            "risk_change_ci95": [
+              -0.0014,
+              0.0104
+            ]
+          },
+          {
+            "kind": "paraphrase_light",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1396,
+            "auto_recall_targets": 0.4843,
+            "risk_change": 0.0066,
+            "risk_change_ci95": [
+              -0.0011,
+              0.014
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1_strong+knn",
+            "attribution": "naive",
+            "risk_targets": 0.1933,
+            "auto_recall_targets": 0.5184,
+            "risk_change": 0.0591,
+            "risk_change_ci95": [
+              0.0418,
+              0.0801
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "minhash",
+            "risk_targets": 0.1388,
+            "auto_recall_targets": 0.49,
+            "risk_change": 0.0058,
+            "risk_change_ci95": [
+              -0.0033,
+              0.0153
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "cosine",
+            "risk_targets": 0.1399,
+            "auto_recall_targets": 0.4904,
+            "risk_change": 0.0068,
+            "risk_change_ci95": [
+              -0.0023,
+              0.0168
+            ]
+          },
+          {
+            "kind": "paraphrase_full",
+            "rate": 0.0,
+            "system": "C1p_strong+knn_prov",
+            "attribution": "containment",
+            "risk_targets": 0.1395,
+            "auto_recall_targets": 0.4896,
+            "risk_change": 0.0064,
+            "risk_change_ci95": [
+              -0.0026,
+              0.016
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "H6_paraphrase_full_evades_and_harms": "3 of 3",
+    "attribution_paraphrase_full": {
+      "minhash": 0.1122,
+      "cosine": 0.1285,
+      "containment": 0.1535
+    },
+    "naive_harm_paraphrase_full": {
+      "0": 0.0532,
+      "1": 0.052,
+      "2": 0.0591
+    }
+  },
+  "cost": {
+    "stages_s": {
+      "load": 0.6,
+      "features": 59.7,
+      "fit_and_certify": 4.5,
+      "  exact0.0": 38.4,
+      "  truncated0.0": 52.4,
+      "  paraphrase_light0.0": 54.8,
+      "  paraphrase_full0.0": 47.0,
+      "evaluate": 202.5
+    }
+  },
+  "exploratory": "unattributed identical copies grouped together (post hoc)"
+}

@@ -277,6 +277,17 @@ quarters. The original certificate, the one-off audit and a 12-month window exce
 quarters. The rule is weakly discriminating: the original certificate's pooled risk is also
 below 5% (4.4–5.0%). Recency matters more than volume. Quarterly exceedances at a tight α remain.
 
+**H6, LLM-paraphrased copies** (protocol 4.2, `PROTOCOL_V42_RESULTS.md`). The danger zone was
+probed with copies paraphrased by an LLM (DeepSeek `deepseek-flash`, 3,440 generations, five
+paraphrases per source, 100 copies). Thorough paraphrases keep the meaning but evade all
+three attribution methods (11–15% attributed), and raise naive kNN's targeted risk by +5 to
++6 pp (rule met 3/3). The registered run counted each of a paraphrase's 20 identical copies as a
+separate source. A post-hoc variant groups identical copies, as an ingestion pipeline would.
+There, provenance-aware kNN loses its excess risk (−0.2 to +0.7 pp), because only five
+distinct texts per source remain. What a provenance-aware tagger must bound is the number of
+distinct undetected texts. An adversary who writes a fresh paraphrase for every copy, at about
+$0.001 each, is the open threat.
+
 ## 8. Methodological note: bootstrapping a certified quantity
 
 Percentile bootstrap intervals for certified AutoRecall are skewed: point estimates sit near

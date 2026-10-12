@@ -36,7 +36,10 @@ was run; the held-out test period was opened once, in protocol 3.0 ([results](re
    ([protocol 4.1](research/reports/PROTOCOL_V41_RESULTS.md)). Word
    containment detects deleted copies at any deletion rate. Moderate token substitution
    (5–30%) evades every detector tested yet still raises risk
-   ([protocol 4.0](research/reports/PROTOCOL_V4_RESULTS.md)).
+   ([protocol 4.0](research/reports/PROTOCOL_V4_RESULTS.md)). LLM paraphrases do the same
+   (11–15% attributed, +5 to +6 pp risk for naive kNN). Grouping identical copies neutralises
+   a few paraphrases mirrored many times, but not a fresh paraphrase per copy
+   ([protocol 4.2](research/reports/PROTOCOL_V42_RESULTS.md)).
 6. **Strong text is the main lever:** at α = 5% automation grows from 4.9% (TF-IDF) to 34.3%
    (LEGAL-BERT + kNN).
 
