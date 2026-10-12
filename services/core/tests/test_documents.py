@@ -1,7 +1,9 @@
 import random
 
+from sqlalchemy import delete
+
 from evigraph_core import documents
-from evigraph_core.models import Project, ProvenanceReason
+from evigraph_core.models import Project, ProvenanceReason, WordTypeBand
 
 BASE = (
     "Commission Regulation establishing the standard import values for determining the entry "
@@ -91,3 +93,65 @@ def test_canonical_text_is_nfc_and_versions_increment(factory, settings) -> None
         s.commit()
     assert v1.canonical_text == "Café\nline"
     assert (v1.version, v2.version) == (1, 2)
+
+
+def _long_text(seed: int, words: int = 600) -> str:
+    """Deterministic text with a few hundred distinct words (enough for containment checks)."""
+    rng = random.Random(seed)
+    vocab = [f"term{seed}x{i}" for i in range(300)] + BASE.split()
+    return " ".join(rng.choice(vocab) for _ in range(words))
+
+
+def _delete_words(text: str, share: float, seed: int = 0) -> str:
+    rng = random.Random(seed)
+    return " ".join(w for w in text.split() if rng.random() >= share)
+
+
+def test_copy_with_words_deleted_is_contained(factory, settings) -> None:
+    source = _long_text(1)
+    copy = _delete_words(source, 0.3)  # 5-gram MinHash cannot see this copy
+    with factory() as s:
+        p = _project(s)
+        a = _ingest(s, settings, p, source)
+        b = _ingest(s, settings, p, copy)
+        s.commit()
+    assert b.provenance_reason is ProvenanceReason.contained
+    assert b.provenance_group_id == a.provenance_group_id
+    assert b.provenance_containment is not None
+    assert b.provenance_containment >= settings.containment_threshold
+    assert b.provenance_jaccard is None
+
+
+def test_containment_is_directional_and_skips_short_texts(factory, settings) -> None:
+    source = _long_text(2)
+    superset = source + " " + _long_text(3)  # contains the source, is not contained in it
+    excerpt = " ".join(source.split()[:30])  # contained, but too few word types to judge
+    with factory() as s:
+        p = _project(s)
+        a = _ingest(s, settings, p, source)
+        b = _ingest(s, settings, p, superset)
+        c = _ingest(s, settings, p, excerpt)
+        s.commit()
+    assert len(set(excerpt.lower().split())) < settings.containment_min_types
+    assert b.provenance_reason is ProvenanceReason.new
+    assert c.provenance_reason is ProvenanceReason.new
+    assert c.type_minhash is None
+    assert {b.provenance_group_id, c.provenance_group_id}.isdisjoint({a.provenance_group_id})
+
+
+def test_backfill_indexes_older_versions(factory, settings) -> None:
+    source = _long_text(4)
+    with factory() as s:
+        p = _project(s)
+        a = _ingest(s, settings, p, source)
+        # simulate a version ingested before the word-type index existed
+        s.execute(delete(WordTypeBand).where(WordTypeBand.document_version_id == a.id))
+        a.type_minhash = None
+        s.flush()
+        before = _ingest(s, settings, p, _delete_words(source, 0.2, seed=1))
+        assert documents.backfill_word_types(s, settings) >= 1
+        after = _ingest(s, settings, p, _delete_words(source, 0.2, seed=2))
+        s.commit()
+    assert before.provenance_reason is ProvenanceReason.new
+    assert after.provenance_reason is ProvenanceReason.contained
+    assert after.provenance_group_id == a.provenance_group_id

@@ -1,4 +1,4 @@
-"""Canonical text, content hashes and MinHash signatures.
+"""Canonical text, content hashes, MinHash signatures and word containment.
 
 Evidence offsets are defined over the canonical text in Unicode code points, so the
 canonical form must be stable: NFC, unified line breaks, no trailing spaces.
@@ -51,6 +51,24 @@ def jaccard(a: np.ndarray, b: np.ndarray) -> float:
     return LeanMinHash(seed=SEED, hashvalues=a, scheme=SCHEME).jaccard(
         LeanMinHash(seed=SEED, hashvalues=b, scheme=SCHEME)
     )
+
+
+def word_types(text: str) -> set[str]:
+    """Distinct lower-cased words of a text."""
+    return set(_TOKEN.findall(text.lower()))
+
+
+def type_minhash(types: set[str], num_perm: int) -> np.ndarray:
+    """MinHash of the set of word types. A copy with words deleted keeps most of its source's
+    word types, so this signature finds containment candidates that 5-gram MinHash misses."""
+    m = MinHash(num_perm=num_perm, seed=SEED, scheme=SCHEME)
+    m.update_batch([t.encode() for t in types])
+    return np.asarray(m.hashvalues, dtype=np.uint64)
+
+
+def containment(part: set[str], whole: set[str]) -> float:
+    """Share of `part`'s word types present in `whole` (Broder, 1997)."""
+    return len(part & whole) / len(part) if part else 0.0
 
 
 def band_buckets(sig: np.ndarray, bands: int) -> list[int]:

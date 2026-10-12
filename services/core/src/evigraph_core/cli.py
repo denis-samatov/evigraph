@@ -32,6 +32,21 @@ def migrate() -> None:
     command.upgrade(cfg, "head")
 
 
+@app.command("backfill-word-types")
+def backfill_word_types() -> None:
+    """Index versions ingested before containment attribution (run once after migrating)."""
+    from evigraph_core import documents
+    from evigraph_core.db import get_engine, session_factory
+    from evigraph_core.settings import get_settings
+
+    settings = get_settings()
+    factory = session_factory(get_engine(settings.database_url))
+    with factory() as s:
+        n = documents.backfill_word_types(s, settings)
+        s.commit()
+    typer.echo(f"indexed {n} versions")
+
+
 @app.command("demo-multieurlex")
 def demo_multieurlex(
     corpus: Annotated[Path, typer.Option(help="research/data/interim/corpus_en.parquet")],

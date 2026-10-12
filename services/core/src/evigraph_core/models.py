@@ -109,6 +109,7 @@ class ProvenanceReason(enum.StrEnum):
     source_id = "source_id"  # same (source_system, source_id) seen before
     exact = "exact"  # identical canonical text
     near = "near"  # MinHash Jaccard >= threshold
+    contained = "contained"  # word containment in an earlier version >= threshold
 
 
 class DocumentVersion(Timestamped, Base):
@@ -129,6 +130,9 @@ class DocumentVersion(Timestamped, Base):
     provenance_group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("provenance_groups.id"))
     provenance_reason: Mapped[ProvenanceReason] = mapped_column(_enum(ProvenanceReason))
     provenance_jaccard: Mapped[float | None] = mapped_column(Float)
+    provenance_containment: Mapped[float | None] = mapped_column(Float)
+    # MinHash of word types; NULL for versions too short to be checked for containment
+    type_minhash: Mapped[bytes | None] = mapped_column(LargeBinary)
 
 
 class MinhashBand(Base):
@@ -136,6 +140,19 @@ class MinhashBand(Base):
 
     __tablename__ = "minhash_bands"
     __table_args__ = (Index("ix_minhash_bands_lookup", "project_id", "band", "bucket"),)
+    document_version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("document_versions.id"), primary_key=True
+    )
+    band: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("projects.id"))
+    bucket: Mapped[int] = mapped_column(BigInteger)
+
+
+class WordTypeBand(Base):
+    """LSH index over word-type MinHash: candidates for containment of a new version."""
+
+    __tablename__ = "word_type_bands"
+    __table_args__ = (Index("ix_word_type_bands_lookup", "project_id", "band", "bucket"),)
     document_version_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("document_versions.id"), primary_key=True
     )

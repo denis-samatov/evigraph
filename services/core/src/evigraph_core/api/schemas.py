@@ -85,3 +85,4 @@ class DocumentVersionOut(Out):
     provenance_group_id: uuid.UUID
     provenance_reason: str
     provenance_jaccard: float | None
+    provenance_containment: float | None

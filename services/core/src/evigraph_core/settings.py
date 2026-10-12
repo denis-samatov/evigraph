@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     minhash_perm: int = 128
     minhash_bands: int = 32  # 32 bands x 4 rows: candidate pairs from Jaccard ~0.5 upwards
     near_duplicate_threshold: float = 0.8
+    # Copies with words deleted: word containment in an earlier version (protocol 4.0). No
+    # genuine act reached 0.98 on MultiEURLEX (max 0.968) or RusLawOD (max < 0.98, 99th
+    # percentile 0.92); shorter texts are trivially contained and are not checked.
+    containment_threshold: float = 0.98
+    containment_min_types: int = 50
+    containment_candidates: int = 20  # verified exactly, best estimated type Jaccard first
 
     # Engine
     knn_k: int = 20

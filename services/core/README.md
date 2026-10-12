@@ -9,8 +9,9 @@ the guarantee no longer holds.
 ## Workflow
 
 1. **Ingest.** Every document version is immutable and joins a *provenance group*: same
-   source identifier, identical text, or a near copy (MinHash LSH, Jaccard ≥ 0.8). Copies count
-   as one source wherever evidence is aggregated.
+   source identifier, identical text, a near copy (MinHash LSH, Jaccard ≥ 0.8), or a copy with
+   words deleted (its word types ≥ 98% contained in an earlier version; checked for texts with
+   at least 50 distinct words). Copies count as one source wherever evidence is aggregated.
 2. **Suggest and review** (works from day one). Without reviewed data a cold-start release
    ranks concepts by their label and definition. Experts accept, reject or add concepts and
    mark a document as fully reviewed; only fully reviewed documents provide gold labels.
@@ -47,6 +48,7 @@ auto-apply certifies at α = 10% from ~500 reviewed documents and at α = 5% fro
 ```bash
 scripts/dev_db.sh start                       # local PostgreSQL 17 on 127.0.0.1:54329
 uv run evigraph-core migrate
+uv run evigraph-core backfill-word-types      # once, for versions ingested before containment
 uv run evigraph-core serve                    # http://127.0.0.1:8000/docs
 uv run pytest -q                              # tests run on a throw-away database
 ```
@@ -82,8 +84,13 @@ Configuration is read from `EVIGRAPH_*` environment variables (see `settings.py`
 * Certification uses reviewed documents; if experts were influenced by earlier suggestions
   (anchoring), gold labels and therefore the guarantee inherit that bias.
 * The Clopper–Pearson bound treats (document, concept) pairs as independent.
-* MinHash does not recognise paraphrased copies; source identifiers should be supplied at
+* Copies with words deleted are recognised by containment. Copies with 5% or more of their
+  words *replaced* or paraphrased are not recognised by any of the detectors tested, yet still
+  inflate kNN evidence (research protocol 4.0). Source identifiers should be supplied at
   ingestion wherever the source system has them.
+* Containment check on RusLawOD (8,551 acts ingested through this service): no genuine act was
+  attributed by containment. Of 200 copies with 5% or 30% of words deleted, all joined their
+  source's group. MinHash alone attributed 14 of the 200 copies at 5% deletion.
 
 ## Not implemented yet
 
