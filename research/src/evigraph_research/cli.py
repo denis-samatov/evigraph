@@ -112,11 +112,12 @@ def rolling() -> None:
 
 
 @app.command()
-def paraphrase(*, estimate: bool = False) -> None:
-    """Protocol 4.2: LLM-paraphrased copies (H6). --estimate only sizes the API calls."""
+def paraphrase(*, estimate: bool = False, group_identical: bool = False) -> None:
+    """Protocol 4.2: LLM-paraphrased copies (H6). --estimate only sizes the API calls;
+    --group-identical is a post-hoc variant that groups identical unattributed copies."""
     from evigraph_research import paraphrase as mod
 
-    mod.run(estimate=estimate)
+    mod.run(estimate=estimate, group_identical=group_identical)
 
 
 def main() -> None:

@@ -350,10 +350,13 @@ def _h3(  # noqa: PLR0912
     timer,
     scenarios: list[tuple[str, float]] | None = None,
     make_texts: Callable[[str, np.ndarray], list[str]] | None = None,
+    group_identical: bool = False,
 ) -> dict:
     """Copy scenarios on `targets`. By default the protocol 4.0 edits; a caller may pass its
     own `scenarios` and `make_texts(kind, sources)`, which returns the copy texts in copy order
-    (COPIES per source, sources in the given order). "exact" always copies the vectors."""
+    (COPIES per source, sources in the given order). "exact" always copies the vectors.
+    With `group_identical`, unattributed copies with identical text share one group, as an
+    ingestion pipeline that groups exact duplicates would do."""
     _, _, _, top1 = provenance.knn_both(x_q, x_train, y_train, k=protocol.KNN_K, groups=None)
     sources = np.unique(top1)
     members = [np.flatnonzero(top1 == s) for s in sources]
@@ -454,11 +457,12 @@ def _h3(  # noqa: PLR0912
             nv = tp = np.empty(0)
             for method, thr in cfg.ATTRIBUTION.items():
                 attributed = score[method] >= thr
-                g_cp = np.where(
-                    attributed,
-                    groups_train[cand],
-                    np.array([f"copy:{i}" for i in range(len(copy_src))], dtype=object),
+                own = (
+                    [f"copy:{hash(t)}" for t in copy_texts]
+                    if group_identical and copy_texts is not None
+                    else [f"copy:{i}" for i in range(len(copy_src))]
                 )
+                g_cp = np.where(attributed, groups_train[cand], np.array(own, dtype=object))
                 nv, pv, tp, _ = provenance.knn_both(
                     x_q,
                     x_pool,

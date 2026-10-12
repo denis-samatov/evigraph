@@ -140,7 +140,7 @@ def _sources(p: v4.Prepared) -> tuple[np.ndarray, np.ndarray]:
     return targets, np.unique(top1)
 
 
-def run(*, estimate: bool = False) -> dict:
+def run(*, estimate: bool = False, group_identical: bool = False) -> dict:
     timer = Timer()
     p = v4.prepare("protocol 4.2 (paraphrased copies of final_test targets' sources)", timer)
     targets, sources = _sources(p)
@@ -236,6 +236,7 @@ def run(*, estimate: bool = False) -> dict:
             timer=timer,
             scenarios=[(s, 0.0) for s in cfg.SCENARIOS],
             make_texts=make_texts,
+            group_identical=group_identical,
         )
     h6.pop("H3_met", None)
     for r in h6["seeds"].values():
@@ -272,7 +273,10 @@ def run(*, estimate: bool = False) -> dict:
         },
         "cost": {"stages_s": timer.stages},
     }
-    (paths.REPORTS / cfg.RESULTS_FILE).write_bytes(
+    if group_identical:  # exploratory, not part of the registered protocol
+        results["exploratory"] = "unattributed identical copies grouped together (post hoc)"
+    name = "protocol_v42_grouped_identical.json" if group_identical else cfg.RESULTS_FILE
+    (paths.REPORTS / name).write_bytes(
         orjson.dumps(results, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
     )
     print(orjson.dumps(results["summary"], option=orjson.OPT_INDENT_2).decode())
