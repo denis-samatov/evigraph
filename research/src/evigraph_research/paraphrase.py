@@ -67,6 +67,7 @@ async def _one(client, sem, key, job: tuple[str, str, int, str]) -> dict:
         "model": cfg.MODEL,
         "temperature": cfg.TEMPERATURE,
         "max_tokens": cfg.MAX_OUTPUT_TOKENS,
+        "thinking": cfg.THINKING,
         "messages": [
             {"role": "system", "content": cfg.SYSTEM},
             {"role": "user", "content": cfg.PROMPTS[level] + source},

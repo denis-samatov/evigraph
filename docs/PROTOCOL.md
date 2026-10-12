@@ -371,3 +371,4 @@ paraphrases and the controls are reported without a rule.
 | 4.0 | 2026-10-09 | part 5: copy detection under edits (H3) and re-certification from a recent audit (H4); registered after the 3.0 results and before any 4.0 run |
 | 4.1 | 2026-10-12 | part 6: rolling re-certification under drift (H5); registered after the 4.0 results and before any 4.1 run |
 | 4.2 | 2026-10-12 | part 7: LLM-paraphrased copies (H6); registered after the 4.1 results and before any paraphrase was generated |
+| 4.2 | 2026-10-12 | before any paraphrase was generated: reasoning disabled (`thinking: disabled`), because by default `deepseek-flash` spent all output tokens on reasoning in a smoke test |

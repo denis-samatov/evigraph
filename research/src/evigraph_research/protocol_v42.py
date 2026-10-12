@@ -24,6 +24,10 @@ MODEL = "deepseek-flash"
 TEMPERATURE = 1.0
 MAX_OUTPUT_TOKENS = 4096
 RETRIES = 3
+# Amendment before any paraphrase was generated (2026-10-12): deepseek-flash reasons by
+# default, and in a smoke test all output tokens went to reasoning with an empty answer.
+# Reasoning is disabled; it is not needed for paraphrasing.
+THINKING = {"type": "disabled"}
 SYSTEM = "You are a careful legal editor. Output only the requested text, without comments."
 PROMPTS = {
     "paraphrase_light": (
