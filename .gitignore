@@ -11,3 +11,4 @@ research/data/
 # run logs
 research/reports/.*.log
 research/reports/.*.stdout
+.env

@@ -327,6 +327,35 @@ the number of quarters above α and of quarters without a certified threshold.
 **Rule H5** (per seed, 3 of 3): for C1 at α = 0.05, the pooled realised risk of the rolling
 6-month scheme over the evaluation quarters is at most α.
 
+# Part 7. Protocol 4.2: LLM-paraphrased copies (H6)
+
+Registered on 2026-10-12, after the protocol 4.1 results and before any paraphrase was
+generated. Parameters and the exact prompts are in
+[`protocol_v42.py`](../research/src/evigraph_research/protocol_v42.py).
+
+## 21. Scenario and rule
+
+Protocol 4.0 found a danger zone. Copies with 5–30% of tokens replaced by random words evade
+all three attribution methods, yet still raise the risk of naive kNN. Random substitution is
+artificial; here the reworded copies are written by an LLM (DeepSeek `deepseek-flash`,
+temperature 1.0). The EUR-Lex texts sent to the API are public (CC BY 4.0).
+
+Targets and sources are those of protocol 4.0 (`final_test`, seed 10). Each source is cut at
+the last whitespace before 6,000 characters. Every source gets 100 copies. Systems,
+thresholds and attribution methods are those of protocol 4.0. The scenarios are:
+
+| Scenario | Copies |
+|---|---|
+| exact | verbatim (must reproduce protocol 4.0) |
+| truncated | the cut source, verbatim (control for truncation) |
+| paraphrase, light | 5 LLM paraphrases with light edits, 20 copies each |
+| paraphrase, full | 5 thorough LLM paraphrases, 20 copies each |
+
+**Rule H6** (3 of 3 seeds, α = 0.10). For full paraphrases, (i) every attribution method
+attributes fewer than 50% of copies to their source's group, and (ii) the lower bound of the
+source-clustered 95% interval of the change in naive kNN's targeted risk is above 0. Light
+paraphrases and the controls are reported without a rule.
+
 ## History
 
 | Version | Date | Change |
@@ -341,3 +370,4 @@ the number of quarters above α and of quarters without a certified threshold.
 | 3.0 | 2026-10-08 | section 17: amendment after an independent review, before `final_test` was opened (edited copies reported, source-clustered bootstrap, marginal risk, pool specified) |
 | 4.0 | 2026-10-09 | part 5: copy detection under edits (H3) and re-certification from a recent audit (H4); registered after the 3.0 results and before any 4.0 run |
 | 4.1 | 2026-10-12 | part 6: rolling re-certification under drift (H5); registered after the 4.0 results and before any 4.1 run |
+| 4.2 | 2026-10-12 | part 7: LLM-paraphrased copies (H6); registered after the 4.1 results and before any paraphrase was generated |
