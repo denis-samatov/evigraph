@@ -111,5 +111,13 @@ def rolling() -> None:
     mod.run()
 
 
+@app.command()
+def paraphrase(*, estimate: bool = False) -> None:
+    """Protocol 4.2: LLM-paraphrased copies (H6). --estimate only sizes the API calls."""
+    from evigraph_research import paraphrase as mod
+
+    mod.run(estimate=estimate)
+
+
 def main() -> None:
     app()

@@ -329,7 +329,7 @@ def _h4(fitted, fr, y, ft) -> dict:
     return out
 
 
-def _h3(
+def _h3(  # noqa: PLR0912
     *,
     targets,
     x_q,
@@ -348,7 +348,12 @@ def _h3(
     n_lab,
     n_jobs,
     timer,
+    scenarios: list[tuple[str, float]] | None = None,
+    make_texts: Callable[[str, np.ndarray], list[str]] | None = None,
 ) -> dict:
+    """Copy scenarios on `targets`. By default the protocol 4.0 edits; a caller may pass its
+    own `scenarios` and `make_texts(kind, sources)`, which returns the copy texts in copy order
+    (COPIES per source, sources in the given order). "exact" always copies the vectors."""
     _, _, _, top1 = provenance.knn_both(x_q, x_train, y_train, k=protocol.KNN_K, groups=None)
     sources = np.unique(top1)
     members = [np.flatnonzero(top1 == s) for s in sources]
@@ -391,7 +396,8 @@ def _h3(
                 f["tau"][cfg.ALPHA],
             )
 
-    scenarios = [("exact", 0.0)] + [(k, r) for k in cfg.EDIT_KINDS for r in cfg.EDIT_RATES]
+    if scenarios is None:
+        scenarios = [("exact", 0.0)] + [(k, r) for k in cfg.EDIT_KINDS for r in cfg.EDIT_RATES]
     table: dict[str, list] = {str(s): [] for s in fitted}
     attribution_rows = []
     for kind, rate in scenarios:
@@ -399,6 +405,12 @@ def _h3(
             if kind == "exact":
                 x_cp = x_train[copy_src]
                 copy_texts = None
+            elif make_texts is not None:
+                copy_texts = make_texts(kind, sources)
+                x_cp = tf.transform(
+                    textmodel.counts(copy_texts, n_features=x_train.shape[1], n_jobs=n_jobs)
+                )
+                x_cp = x_cp.astype(np.float32).tocsr()
             else:
                 rng = np.random.default_rng(
                     [cfg.EDIT_SEED, cfg.EDIT_KINDS.index(kind), int(rate * 1000)]
