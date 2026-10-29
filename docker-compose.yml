@@ -14,6 +14,15 @@ services:
       interval: 2s
       retries: 30
 
+  migrate:
+    build: services/core
+    command: ["uv", "run", "--no-sync", "evigraph-core", "migrate"]
+    environment:
+      EVIGRAPH_DATABASE_URL: postgresql+psycopg://evigraph:evigraph@db:5432/evigraph
+    depends_on:
+      db:
+        condition: service_healthy
+
   api:
     build: services/core
     environment:
@@ -25,6 +34,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

@@ -8,7 +8,10 @@ experiment was pre-registered in `docs/PROTOCOL.md` before it was run.*
 Automatic document tagging is deployable only when the error rate of the tags it applies
 without review is controlled. Learn-then-Test (LTT) certifies a confidence threshold so that
 the risk of auto-applied tags stays below a level α with high probability, assuming that the
-data seen at deployment are exchangeable with the certification data. We study what happens
+data seen at deployment are exchangeable with the certification data and the bound’s
+independence assumptions apply. Document-label pair dependence limits this formal
+interpretation (§10); a document-cluster bootstrap is not a proof restoring that bound.
+We study what happens
 when this assumption is broken in a specific and common way: the reference collection that a
 tagger retrieves evidence from receives copies of existing documents. On MultiEURLEX (English,
 127 EuroVoc concepts) enriched with 274k act-to-act relations from EUR-Lex, in a sequence of

@@ -56,7 +56,7 @@ def test_selected_span_is_the_topical_sentence_and_deleting_it_lowers_the_score(
 
 @pytest.fixture
 def client(settings) -> TestClient:
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings), base_url="http://127.0.0.1")
 
 
 def test_evidence_endpoint_returns_verified_quotes(client: TestClient, factory) -> None:

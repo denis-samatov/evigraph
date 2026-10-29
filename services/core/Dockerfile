@@ -11,6 +11,12 @@ COPY migrations ./migrations
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
-ENV EVIGRAPH_ARTIFACT_DIR=/data/artifacts
+RUN groupadd --system --gid 10001 evigraph \
+    && useradd --system --uid 10001 --gid 10001 --create-home evigraph \
+    && mkdir -p /data/artifacts \
+    && chown -R evigraph:evigraph /data
+
+ENV EVIGRAPH_ARTIFACT_DIR=/data/artifacts PYTHONDONTWRITEBYTECODE=1 UV_CACHE_DIR=/tmp/uv-cache
+USER 10001:10001
 EXPOSE 8000
-CMD ["sh", "-c", "uv run --no-sync evigraph-core migrate && uv run --no-sync evigraph-core serve --host 0.0.0.0 --port 8000"]
+CMD ["uv", "run", "--no-sync", "evigraph-core", "serve", "--host", "0.0.0.0", "--port", "8000"]

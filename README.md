@@ -4,8 +4,10 @@
 
 A research project on **certified document tagging** with concepts from a controlled
 vocabulary: the system applies a tag automatically only if the error rate among automatic
-tags is guaranteed (with probability 1 − δ) not to exceed α, and sends everything else to an
-expert.
+tags is certified under the procedure’s independence and exchangeability assumptions
+(with probability 1 − δ) not to exceed α, and sends everything else to an expert.
+These are conditional statistical assumptions, not an unconditional deployment guarantee;
+the experiments below demonstrate violations under temporal drift and unrecognised copies.
 
 Working paper title: **"Copies Are Not Corroboration: Certified Document Tagging under Source
 Duplication"** — draft in [`docs/paper/draft.md`](docs/paper/draft.md).
@@ -46,6 +48,10 @@ was run; the held-out test period was opened once, in protocol 3.0 ([results](re
 ![Realised risk under source duplication](research/reports/figures/risk_vs_copies.png)
 
 ## Product: EviGraph Core
+
+Core/Studio are a trusted local research demonstrator. Keep the API on loopback. Local
+Host/Origin browser guards do not authenticate remote users or make reviewer labels verified
+identities; remote deployment requires an authorized IAM/RBAC design and separate acceptance.
 
 [`services/core`](services/core/README.md) turns these results into a service: ingestion with
 provenance, suggestions with supporting evidence, expert review with optimistic concurrency,
