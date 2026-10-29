@@ -28,7 +28,7 @@ jobs:
         with:
           enable-cache: true
       # torch and transformers are only needed to fine-tune LEGAL-BERT, not for the tests
-      - run: uv sync --all-groups --no-install-package torch --no-install-package transformers
+      - run: uv sync --locked --all-groups --no-install-package torch --no-install-package transformers
       - run: uv run --no-sync ruff format --check src tests
       - run: uv run --no-sync ruff check src tests
       - run: uv run --no-sync ty check src
@@ -63,9 +63,9 @@ jobs:
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-      - run: uv sync --all-groups
-      - run: uv run --no-sync ruff format --check src tests migrations
-      - run: uv run --no-sync ruff check src tests migrations
+      - run: uv sync --locked --all-groups
+      - run: uv run --no-sync ruff format --check src tests tests_unit migrations
+      - run: uv run --no-sync ruff check src tests tests_unit migrations
       - run: uv run --no-sync ty check src
       - run: uv run --no-sync pytest -q
 

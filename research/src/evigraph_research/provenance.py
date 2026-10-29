@@ -22,8 +22,8 @@ CHUNK = 512
 
 def group_index(groups: np.ndarray) -> tuple[np.ndarray, int]:
     """Map arbitrary group labels to 0..n_groups-1."""
-    _, codes = np.unique(groups, return_inverse=True)
-    return codes.astype(np.int64), int(codes.max()) + 1 if len(codes) else 0
+    labels, codes = np.unique(groups, return_inverse=True)
+    return codes.astype(np.int64), len(labels)
 
 
 def group_label_means(codes: np.ndarray, n_groups: int, y: np.ndarray) -> np.ndarray:

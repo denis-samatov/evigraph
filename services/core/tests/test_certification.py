@@ -17,7 +17,7 @@ def client(settings) -> TestClient:
     settings.audit_rate = 1.0  # audit every auto-applied tag
     settings.min_audit = 5
     settings.cert_grid_min_applied = 20
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings), base_url="http://127.0.0.1")
 
 
 def _key() -> str:

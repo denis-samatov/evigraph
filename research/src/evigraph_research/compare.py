@@ -88,7 +88,7 @@ class WeightedCertifier:
         ucb = np.ones_like(cn)
         ucb[ok] = beta.ppf(1 - delta, ck[ok] + 1, cn[ok] - ck[ok])
         passed = ucb <= alpha
-        first_fail = np.argmin(passed) if not passed.all() else len(passed)
+        first_fail = int(np.argmin(passed)) if not passed.all() else len(passed)
         if first_fail == 0:
             return 0.0
         j = first_fail - 1

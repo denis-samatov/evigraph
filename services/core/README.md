@@ -3,8 +3,9 @@
 The service that turns the research results into a working tagging workflow: documents are
 ingested with provenance, an engine suggests concepts with supporting evidence, experts review
 them, and once enough reviewed data exists a threshold is **certified** so that confident tags
-can be applied automatically — with audit-based monitoring that switches auto-apply off when
-the guarantee no longer holds.
+can be applied automatically under independence/exchangeability assumptions — with audit-based
+monitoring that can suspend auto-apply when audited errors reveal a problem. This monitoring
+is not an unconditional risk guarantee under drift or dependent document-label pairs.
 
 ## Workflow
 
@@ -19,7 +20,9 @@ the guarantee no longer holds.
    documents and a stacker trained on out-of-fold features. 30% of provenance groups are held
    out from training for certification.
 4. **Certify.** Learn-then-Test on the held-out documents finds the most permissive threshold
-   whose error rate among auto-applied tags is ≤ α with probability ≥ 1 − δ. The certification
+   whose error rate among auto-applied tags is ≤ α with probability ≥ 1 − δ **under the
+   certifier’s independence and exchangeability assumptions**. Document-label dependence,
+   drift and missed provenance groups limit that interpretation. The certification
    belongs to that release; retraining requires a new certification.
 5. **Auto-apply and monitor.** Suggestions above the certified threshold are applied
    automatically (`decision: auto_applied`); a share of them goes to expert audit. When the
@@ -97,3 +100,21 @@ Configuration is read from `EVIGRAPH_*` environment variables (see `settings.py`
 Authentication and per-project access control, background workers for training (training
 runs inside the request), and LLM-based evidence extraction (quotes are currently selected by
 the engine's own passage contributions).
+
+## Local security and operator acceptance
+
+The API accepts loopback Host names and rejects browser origins outside the configured
+Studio/same-origin list. CORS alone did not prevent simple cross-origin mutations; the
+explicit request boundary now rejects them before reaching database code. These checks
+protect local browser use, not remote authentication. Non-browser clients can supply Host
+and Origin, so keep network exposure on loopback. `reviewer` remains an unverified label
+from the trusted operator. Remote subject/RBAC/catalog isolation must be designed and tested
+before changing that scope; see [acceptance protocol](../../docs/ACCEPTANCE.md).
+
+`/health` is process liveness; `/health/ready` tests database connectivity. Compose runs
+migrations once in a separate `migrate` service before starting the API, rather than in
+every API replica. The image runs as UID/GID10001. Back up existing artifact volumes and
+prepare their write permissions for that identity before upgrading; no existing data or
+volume ownership is changed automatically. Running the image outside Compose requires an
+explicit migration release step before serving. Container build/run was not exercised by
+the offline code patch.

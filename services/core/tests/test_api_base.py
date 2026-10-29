@@ -6,7 +6,7 @@ from evigraph_core.app import create_app
 
 @pytest.fixture
 def client(settings) -> TestClient:
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings), base_url="http://127.0.0.1")
 
 
 def test_project_catalog_and_document_flow(client: TestClient) -> None:

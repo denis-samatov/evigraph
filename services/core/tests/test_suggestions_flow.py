@@ -13,7 +13,7 @@ KEYS = ["incident", "pdata", "termination"]
 
 @pytest.fixture
 def client(settings) -> TestClient:
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings), base_url="http://127.0.0.1")
 
 
 def _key() -> str:
