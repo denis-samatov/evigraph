@@ -95,3 +95,9 @@ part establishes what such a system can base its quality guarantees on.
 Code: Apache License 2.0 ([`LICENSE`](LICENSE)); `apps/studio` is derived from an Eclipse GLSP
 template and keeps its EPL-2.0 / GPL-2.0 / MIT terms. Data are not included and keep their own
 licenses — notably RusLawOD is CC BY-NC 4.0 (research use only). See [`NOTICE`](NOTICE).
+
+## Security qualification
+
+Studio retains known transitive advisory matches, including a nested Monaco browser
+dependency. See [the current dependency security boundary](docs/DEPENDENCY_SECURITY.md).
+Use trusted local workspaces; remote hosting and untrusted extensions are not qualified.
