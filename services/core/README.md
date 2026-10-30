@@ -118,3 +118,8 @@ prepare their write permissions for that identity before upgrading; no existing 
 volume ownership is changed automatically. Running the image outside Compose requires an
 explicit migration release step before serving. Container build/run was not exercised by
 the offline code patch.
+
+The container base and uv images are digest-pinned. Refresh them deliberately and repeat
+the non-root build/CLI/artifact-permission checks; a digest pin is not an OS advisory scan.
+Studio JavaScript advisory matches are tracked separately in
+[dependency security qualification](../../docs/DEPENDENCY_SECURITY.md).
