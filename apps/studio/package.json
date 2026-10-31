@@ -34,15 +34,29 @@
     "server:start": "yarn --cwd evigraph-glsp-server start",
     "start": "yarn browser start",
     "start:external": "yarn browser start:external",
-    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs scripts/test-cli-decompress.cjs && node scripts/test-studio-security.cjs",
+    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs scripts/test-cli-decompress.cjs scripts/test-cli-matching.cjs scripts/test-cli-remaining.cjs && node scripts/test-studio-security.cjs",
     "watch": "concurrently --kill-others -n tsc,browser,server -c red,yellow \"tsc -b -w --preserveWatchOutput\" \"yarn -s browser watch\" \"yarn -s server watch:bundle\""
   },
   "resolutions": {
+    "**/@eclipse-glsp/config/rimraf/glob": "14.0.3",
+    "**/@eslint/config-array/minimatch": "11.0.3",
     "**/@theia/cli/decompress": "npm:@xhmikosr/decompress@11.1.4",
+    "**/@theia/cli/glob": "14.0.3",
     "**/@theia/cli/puppeteer": "25.16.0",
     "**/@theia/cli/puppeteer-core": "25.16.0",
+    "**/@theia/filesystem/minimatch": "11.0.3",
+    "**/@theia/filesystem/rimraf/glob": "14.0.3",
     "**/@theia/monaco-editor-core/dompurify": "3.4.17",
-    "**/mocha/serialize-javascript": "7.1.4"
+    "**/@theia/navigator/minimatch": "11.0.3",
+    "**/@typescript-eslint/typescript-estree/minimatch": "11.0.3",
+    "**/eslint/minimatch": "11.0.3",
+    "**/evigraph-glsp-client/rimraf/glob": "14.0.3",
+    "**/mocha/diff": "8.0.3",
+    "**/mocha/glob": "14.0.3",
+    "**/mocha/minimatch": "11.0.3",
+    "**/mocha/serialize-javascript": "7.1.4",
+    "**/react-tooltip/uuid": "11.1.1",
+    "**/trash/uuid": "11.1.1"
   },
   "dependencies": {
     "dompurify": "3.4.17"
