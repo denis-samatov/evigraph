@@ -36,7 +36,7 @@ short heading-like lines can rank high (e.g. "Рекомендовать Пра�
 
 ## Running
 
-Requirements: Node ≥ 22; yarn 1 is used through `npx`.
+Requirements: Node ≥ 22.12; yarn 1 is used through `npx`.
 
 ```bash
 npx yarn@1.22.22 install          # installs and builds all packages
@@ -46,6 +46,26 @@ npx yarn@1.22.22 start            # http://localhost:3000, workspace in ./worksp
 Core must be running (default `http://127.0.0.1:8000`; change it with the command
 **EviGraph: Set Core API URL**, and the reviewer name with **EviGraph: Set Reviewer Name**).
 Core allows the Studio origin through CORS (`EVIGRAPH_CORS_ORIGINS`).
+
+## Security checks
+
+The build applies a deliberately version-bound Monaco sanitizer backport from the
+official DOMPurify 3.4.17 source. Unknown upstream bytes or versions stop the build.
+CI also exercises hostile HTML in the Ubuntu 24.04 runner's packaged Chrome with
+its sandbox enabled, records its version and checks the actual browser assets.
+For a local downloaded Chrome, run:
+
+```sh
+npx --yes yarn@1.22.22 exec puppeteer browsers install chrome
+npx --yes yarn@1.22.22 test:security
+npx --yes yarn@1.22.22 audit:security
+```
+
+The full dependency audit still reports findings and exits nonzero. Plugin/archive
+installation is not included in this application; do not enable it without fixing
+the remaining archive-extraction dependencies and validating that input path.
+See [the dependency inventory](../../docs/DEPENDENCY_SECURITY.md) for the exact
+backport contract, verified scope and remaining gates.
 
 ## Packages
 

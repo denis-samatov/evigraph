@@ -71,7 +71,7 @@ jobs:
 
   studio:
     name: studio (TypeScript build)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -85,3 +85,12 @@ jobs:
           node-version: 22
       # install runs the workspace "prepare" script: tsc, server bundle and Theia build
       - run: npx --yes yarn@1.22.22 install --frozen-lockfile --network-timeout 600000
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+      # Ubuntu's packaged Chrome has an existing AppArmor sandbox profile.
+      - name: Record the runner's sandbox-supported Chrome
+        run: /opt/google/chrome/chrome --version
+      - name: Verify sanitizer backport, hostile DOM and actual browser assets
+        env:
+          EVIGRAPH_BROWSER_PATH: /opt/google/chrome/chrome
+        run: npx --yes yarn@1.22.22 test:security
