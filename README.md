@@ -98,6 +98,8 @@ licenses — notably RusLawOD is CC BY-NC 4.0 (research use only). See [`NOTICE`
 
 ## Security qualification
 
-Studio retains known transitive advisory matches, including a nested Monaco browser
-dependency. See [the current dependency security boundary](docs/DEPENDENCY_SECURITY.md).
+Studio's Monaco sanitizer has a version/hash-bound local backport, checked in Chromium
+against hostile HTML and actual browser assets. Other transitive advisory matches
+remain, including CLI archive/tooling dependencies. See
+[the current dependency security boundary](docs/DEPENDENCY_SECURITY.md).
 Use trusted local workspaces; remote hosting and untrusted extensions are not qualified.
