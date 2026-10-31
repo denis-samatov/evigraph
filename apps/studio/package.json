@@ -21,9 +21,11 @@
     "all": "yarn clean && yarn install && yarn lint",
     "browser": "yarn --cwd evigraph-studio-app",
     "build": "yarn compile && yarn bundle",
-    "bundle": " yarn server bundle && yarn browser bundle",
+    "bundle": "node scripts/prepare-monaco-sanitizer.cjs && yarn server bundle && yarn browser bundle",
+    "test:security": "node --test scripts/test-sanitizer-backport.cjs && node scripts/test-studio-security.cjs",
+    "audit:security": "yarn audit --json",
     "check:theia-version": "theia check:theia-version",
-    "clean": "lerna run clean",
+    "clean": "yarn workspace evigraph-glsp-client clean && yarn workspace evigraph-glsp-server clean && yarn workspace evigraph-theia clean",
     "compile": "tsc -b",
     "lint": "eslint .",
     "lint:ci": "yarn lint --output-file eslint_report.json --format json",
@@ -37,11 +39,18 @@
   "devDependencies": {
     "@eclipse-glsp/config": "2.8.0",
     "concurrently": "^8.2.2",
-    "lerna": "^8.1.7",
+    "esbuild": "0.28.2",
+    "puppeteer": "25.16.0",
     "typescript": "^5.5.3"
   },
+  "dependencies": {
+    "dompurify": "3.4.17"
+  },
+  "resolutions": {
+    "**/@theia/monaco-editor-core/dompurify": "3.4.17"
+  },
   "engines": {
-    "node": ">=22",
+    "node": ">=22.12.0",
     "yarn": ">=1.7.0 <2.x.x"
   },
   "description": "EviGraph Studio: Theia + GLSP IDE over the EviGraph Core API"

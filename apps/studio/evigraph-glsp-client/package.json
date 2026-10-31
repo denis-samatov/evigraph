@@ -43,6 +43,6 @@
     "balloon-css": "^0.5.0"
   },
   "devDependencies": {
-    "rimraf": "^2.6.1"
+    "rimraf": "^6.1.3"
   }
 }

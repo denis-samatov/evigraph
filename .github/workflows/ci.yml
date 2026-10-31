@@ -85,3 +85,7 @@ jobs:
           node-version: 22
       # install runs the workspace "prepare" script: tsc, server bundle and Theia build
       - run: npx --yes yarn@1.22.22 install --frozen-lockfile --network-timeout 600000
+      - name: Install the pinned browser test tool's Chrome
+        run: npx --yes yarn@1.22.22 exec puppeteer browsers install chrome
+      - name: Verify sanitizer backport, hostile DOM and actual browser assets
+        run: npx --yes yarn@1.22.22 test:security
