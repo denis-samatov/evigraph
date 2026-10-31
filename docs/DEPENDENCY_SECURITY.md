@@ -4,6 +4,32 @@ The Monaco sanitizer P1 has a locally maintained, tested security backport. This
 **not a clean dependency audit or a patched upstream Theia release**. Core remains
 loopback-only; remote identity, deployment and scientific acceptance are separate gates.
 
+## Current follow-up: guarded deepmerge returned-object hardening
+
+`prepare-deepmerge.cjs`, invoked before every standard bundle, regenerates three
+reviewed destination assignments in deepmerge 4.3.1's source, CommonJS and UMD
+entries with `Object.defineProperty`. Copying an own `__proto__` key now preserves
+it as data instead of invoking an inherited setter on the fresh result. The
+upstream safe-key policy, arrays, custom merge hooks and ordinary values remain
+unchanged. Identity, version and exact before/after SHA-256 checks cover every
+entry point before any write; unknown bytes fail the build rather than being
+silently patched. No installed vendor file is maintained by hand.
+
+Three controlled cases failed before and passed after this correction. Thirteen
+additional Node contracts cover these cases, guard refusal/idempotence, ordinary
+merge APIs and actual Theia application configuration/localization callers. The
+full maintained suite contains **42 Node contracts plus six DOM cases**; consult
+execution receipts for the tested platform and result.
+
+This is a **local defensive backport, not a fixed upstream release**. The package
+version remains 4.3.1 and [GHSA-gcqx-w48m-w2h4](https://osv.dev/vulnerability/GHSA-gcqx-w48m-w2h4)
+remains in version-based audits. The issue is disputed upstream in
+[issue 273](https://github.com/TehShrike/deepmerge/issues/273): these probes show a
+changed prototype of the returned object, not global `Object.prototype`
+pollution or proven remote exploitation. No advisory is suppressed. Legacy and
+bundled minimatch, untrusted-workload resource limits and operational acceptance
+remain open. Retire or requalify this backport when upstream bytes/version change.
+
 ## Current follow-up: compatible matching, UUID and reporter callers
 
 The current scoped resolutions additionally select `glob` 14.0.3 for the actual
@@ -47,7 +73,7 @@ prove the embedded implementation's precise version or that any lock override
 replaces it. Its bundled matcher provenance and hostile-pattern resource bounds
 remain unqualified; this follow-up does not claim to patch that embedded code.
 
-The full maintained suite is now 29 Node contracts plus six DOM cases, following
+That preceding follow-up qualified 29 Node contracts plus six DOM cases, following
 frozen installation and the complete Studio bundle. Local/hosted status must be
 read from actual execution receipts. Source API references:
 [glob](https://github.com/isaacs/node-glob),
@@ -243,9 +269,11 @@ severities or packages are ignored.
   reviewed Puppeteer minor release as the owned test harness. Actual adapter/CDP
   compatibility passes; remote or attacker-controlled BiDi endpoints remain unsupported
   and are not qualified by a lock scan or the synthetic adapter fixture.
-- **deepmerge — open low finding.** Theia application-package merges developer-owned
-  application manifest/config defaults; the inspected path does not take Core document
-  text. Do not treat arbitrary untrusted application manifests as accepted input.
+- **deepmerge — local returned-object hardening; version-based low finding open.**
+  The guarded backport above protects the tested destination writes. Theia
+  application-package merges developer-owned manifest/config defaults; the inspected
+  path does not take Core document text. Arbitrary untrusted manifests remain
+  outside the qualified input boundary.
 - **UUID/jsdiff/modern glob — corrected in reviewed callers.** UUID v4 remains
   compatible, name/time output-buffer bounds are checked, actual Mocha diff
   reporters pass, and controlled glob cancellation stops new traversal reads.
