@@ -130,7 +130,17 @@ npx --yes yarn@1.22.22 audit:security
 The last command is deliberately nonzero while findings remain. For an existing local
 Chrome, set `EVIGRAPH_BROWSER_PATH` for the test process only. The browser sandbox is
 left enabled; no browser/global security setting is changed. CI performs the actual
-bundle/security checks after its frozen install. The full audit is a separate explicit
+bundle/security checks after its frozen install. Its Studio job uses Ubuntu 24.04
+and the runner's packaged `/opt/google/chrome/chrome`, records its exact version,
+and sets `EVIGRAPH_BROWSER_PATH` only for the test step. The initial downloaded
+Chrome for Testing launch failed with “No usable sandbox” under Ubuntu's AppArmor
+user-namespace restrictions. The packaged stable Chrome path has an existing
+system sandbox profile, as described in the
+[Chromium AppArmor guidance](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md).
+No sandbox-disabling flag, AppArmor/sysctl change or skipped browser test is used.
+This CI browser follows the recorded runner image rather than a separately
+pinned browser download; local runs may use the downloaded browser or the explicit
+executable override above. The full audit is a separate explicit
 release gate and is not represented as a passing CI audit job.
 Refresh the advisory inventory and inspect new upstream releases before broadening the
 input or deployment boundary. A local passing test is not hosted CI or production proof.

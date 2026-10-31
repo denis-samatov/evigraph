@@ -51,7 +51,9 @@ Core allows the Studio origin through CORS (`EVIGRAPH_CORS_ORIGINS`).
 
 The build applies a deliberately version-bound Monaco sanitizer backport from the
 official DOMPurify 3.4.17 source. Unknown upstream bytes or versions stop the build.
-CI also exercises hostile HTML in Chromium and checks the actual browser assets:
+CI also exercises hostile HTML in the Ubuntu 24.04 runner's packaged Chrome with
+its sandbox enabled, records its version and checks the actual browser assets.
+For a local downloaded Chrome, run:
 
 ```sh
 npx --yes yarn@1.22.22 exec puppeteer browsers install chrome
