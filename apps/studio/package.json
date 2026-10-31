@@ -23,7 +23,7 @@
     "audit:security": "yarn audit --json",
     "browser": "yarn --cwd evigraph-studio-app",
     "build": "yarn compile && yarn bundle",
-    "bundle": "node scripts/prepare-monaco-sanitizer.cjs && yarn server bundle && yarn browser bundle",
+    "bundle": "node scripts/prepare-monaco-sanitizer.cjs && node scripts/prepare-cli-decompress.cjs && yarn server bundle && yarn browser bundle",
     "check:theia-version": "theia check:theia-version",
     "clean": "yarn workspace evigraph-glsp-client clean && yarn workspace evigraph-glsp-server clean && yarn workspace evigraph-theia clean",
     "compile": "tsc -b",
@@ -34,10 +34,11 @@
     "server:start": "yarn --cwd evigraph-glsp-server start",
     "start": "yarn browser start",
     "start:external": "yarn browser start:external",
-    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs && node scripts/test-studio-security.cjs",
+    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs scripts/test-cli-decompress.cjs && node scripts/test-studio-security.cjs",
     "watch": "concurrently --kill-others -n tsc,browser,server -c red,yellow \"tsc -b -w --preserveWatchOutput\" \"yarn -s browser watch\" \"yarn -s server watch:bundle\""
   },
   "resolutions": {
+    "**/@theia/cli/decompress": "npm:@xhmikosr/decompress@11.1.4",
     "**/@theia/cli/puppeteer": "25.16.0",
     "**/@theia/cli/puppeteer-core": "25.16.0",
     "**/@theia/monaco-editor-core/dompurify": "3.4.17",
