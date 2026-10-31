@@ -4,7 +4,65 @@ The Monaco sanitizer P1 has a locally maintained, tested security backport. This
 **not a clean dependency audit or a patched upstream Theia release**. Core remains
 loopback-only; remote identity, deployment and scientific acceptance are separate gates.
 
-## Current follow-up: guarded deepmerge returned-object hardening
+## Current closure: compatible matcher bounds and source-rebuilt OPFS
+
+The standard frozen install/build now regenerates the reviewed local fixes before
+bundling. `prepare-minimatch.cjs` backports the three preprocessing bounds from
+[upstream commit 77a0f5c4](https://github.com/isaacs/minimatch/commit/77a0f5c4b80bdc641c3c930a1d9edf5ad2db57f8)
+to both installed minimatch 10.2.6 copies, CJS and ESM. It preserves the `makeRe`
+API required by import-x. Identity/version and all four before/after hashes are
+validated before any write; stale entry-point source-map directives are detached.
+The package versions, licenses and advisory identities remain unchanged.
+
+`prepare-opfs.cjs` rebuilds all four OPFS ESM/CommonJS entry points and the inline
+Worker with fixed minimatch 11.0.3, using the existing pinned esbuild toolchain.
+Seven actual published TypeScript runtime sources are preserved byte for byte.
+The source material comes from cross-agreeing source maps in the SRI-verified npm
+1.3.1 package. Its advertised gitHead does not reproduce three of these source
+files; blindly building that commit would introduce unrelated implementation and
+export changes. This limitation, source/map hashes, all 37 original package file
+hashes, exact build inputs and generated hashes are retained in
+[sources and provenance](../apps/studio/scripts/vendor/opfs-worker/README.md).
+No minified bundle is edited or maintained by hand. Old embedded helper/worker
+assets are removed only after complete original-file and generated-output checks.
+Relative source maps and redistributed dependency licenses are generated too.
+Unknown bytes, versions, file sets, sources or build outputs fail closed.
+
+The public export sets remain exactly 46 index exports and one raw export in both
+module formats. Bounded contracts preserve ordinary matching and demonstrate the
+backported explicit expansion cap and >1000-entry pairwise preprocessing skip,
+without a denial-of-service workload or timing assertions. Real sandboxed Chrome
+Workers exercise Unicode/binary reads and writes, sync descriptors, watch
+include/exclude, unwatch and the raw byte API in private test contexts. The facade
+uses the actual Theia constructor profile: string root, BroadcastChannel instance
+and hashing disabled. An owned physical OPFS subdirectory is checked; no user
+storage is accessed. The complete maintained suite contains **63 Node contracts,
+two OPFS browser profiles and six hostile DOM cases**. Execution receipts determine
+which platform has actually passed; these are bounded integration contracts,
+not arbitrary-worker resource or full Studio user-flow qualification.
+
+### Source-level advisory disposition
+
+| Version-based match | Current source disposition | Remaining boundary |
+|---|---|---|
+| deepmerge 4.3.1 / GHSA-gcqx-w48m-w2h4 | Guarded returned-object hardening below; reproduced own-key cases corrected | Upstream description disputed; version scan remains matched |
+| minimatch 10.2.6 / GHSA-g3hv-75wg-m249 | Official bounds backported in both installed copies; actual import-x compatibility retained | Local maintained patch; package metadata remains 10.2.6 |
+| Embedded OPFS minimatch 10.0.3 | Replaced through reviewed source rebuild with 11.0.3, including inline Worker | Published source-map provenance; original Vite output is not reproduced bit for bit |
+| Legacy minimatch 3.1.5 / broad OSV range | The reported optimization-level-2 machinery is absent in this exact legacy implementation | Retain broad scanner match; do not infer general pattern/resource safety |
+
+The [official minimatch advisory](https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249)
+describes optimization level >=2. Inspected import-x and original OPFS routes use
+default level 1, while the original legacy implementation lacks that mechanism.
+The defensive 10.x backport and embedded rebuild additionally remove the reviewed
+source mechanism. This is **source-qualified local remediation, not a clean
+version-based audit**: no advisory is suppressed, package identity is not renamed
+and `audit:security` deliberately preserves its native nonzero result. Arbitrary
+hostile patterns, whole-worker resource isolation, deployment and external
+operational acceptance remain outside these bounded contracts. Review these local
+fixes when upstream releases or pinned bytes change; scheduled review date:
+2026-11-14. No background automation is implied by that date.
+
+## Prior follow-up: guarded deepmerge returned-object hardening
 
 `prepare-deepmerge.cjs`, invoked before every standard bundle, regenerates three
 reviewed destination assignments in deepmerge 4.3.1's source, CommonJS and UMD
@@ -26,11 +84,10 @@ version remains 4.3.1 and [GHSA-gcqx-w48m-w2h4](https://osv.dev/vulnerability/GH
 remains in version-based audits. The issue is disputed upstream in
 [issue 273](https://github.com/TehShrike/deepmerge/issues/273): these probes show a
 changed prototype of the returned object, not global `Object.prototype`
-pollution or proven remote exploitation. No advisory is suppressed. Legacy and
-bundled minimatch, untrusted-workload resource limits and operational acceptance
-remain open. Retire or requalify this backport when upstream bytes/version change.
+pollution or proven remote exploitation. No advisory is suppressed. The subsequent matcher closure above supersedes its dependency finding;
+untrusted-workload resource limits and operational acceptance remain unqualified. Retire or requalify this backport when upstream bytes/version change.
 
-## Current follow-up: compatible matching, UUID and reporter callers
+## Prior follow-up: compatible matching, UUID and reporter callers
 
 The current scoped resolutions additionally select `glob` 14.0.3 for the actual
 modern CLI/Mocha and rimraf 5/6 callers, `minimatch` 11.0.3 for reviewed named-API
@@ -64,7 +121,8 @@ Fresh same-engine exact-lock OSV: **1225 actual pairs / 10 affected versions /
 5 IDs before; 1209 pairs / 3 affected versions / 2 IDs after**. The remaining
 pairs are `deepmerge` 4.3.1 and `minimatch` 3.1.5/10.2.6. Native Yarn audit is
 still **exit 6, 17 path occurrences / 2 IDs, 6 low and 11 moderate**. These are
-current counts; earlier sections below are remediation history. No advisory
+version-based counts from that preceding follow-up; source remediation is described
+above. No advisory
 suppression or clean overall security/release claim is made.
 
 `opfs-worker` 1.3.1 also embeds matcher code in distributed helper files and
@@ -278,10 +336,11 @@ severities or packages are ignored.
   compatible, name/time output-buffer bounds are checked, actual Mocha diff
   reporters pass, and controlled glob cancellation stops new traversal reads.
   These are bounded contracts, not arbitrary input/workload qualification.
-- **Legacy/bundled minimatch — open.** Callback-style glob, the makeRe-dependent
-  import plugin and OPFS matching require separate compatible remediation.
-  The embedded OPFS implementation is not proven patched by lock changes.
-  Attacker-controlled patterns, huge trees and resource limits remain unqualified.
+- **Legacy/bundled minimatch — source-qualified disposition above.** The makeRe
+  caller retains its compatible backported 10.x API; the embedded OPFS matcher is
+  rebuilt from sources with 11.0.3. The reported mechanism is absent in legacy3.x,
+  while broad version matches remain unsuppressed. Arbitrary hostile patterns,
+  huge trees and whole-worker resource isolation remain unqualified.
 
 The current document-to-review path and local controlled CPU workflow are distinct
 from those unsupported operations. Remaining supply-chain findings prevent a **full

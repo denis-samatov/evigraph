@@ -1,0 +1,3 @@
+# Preserve the exact audited third-party source bytes and their provenance hashes.
+# Upstream comment whitespace is retained; owned code keeps normal whitespace checks.
+apps/studio/scripts/vendor/opfs-worker/src/** -text whitespace=-blank-at-eol
