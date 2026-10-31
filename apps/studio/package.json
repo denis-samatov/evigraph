@@ -23,7 +23,7 @@
     "audit:security": "yarn audit --json",
     "browser": "yarn --cwd evigraph-studio-app",
     "build": "yarn compile && yarn bundle",
-    "bundle": "node scripts/prepare-monaco-sanitizer.cjs && node scripts/prepare-cli-decompress.cjs && yarn server bundle && yarn browser bundle",
+    "bundle": "node scripts/prepare-monaco-sanitizer.cjs && node scripts/prepare-cli-decompress.cjs && node scripts/prepare-deepmerge.cjs && yarn server bundle && yarn browser bundle",
     "check:theia-version": "theia check:theia-version",
     "clean": "yarn workspace evigraph-glsp-client clean && yarn workspace evigraph-glsp-server clean && yarn workspace evigraph-theia clean",
     "compile": "tsc -b",
@@ -34,7 +34,7 @@
     "server:start": "yarn --cwd evigraph-glsp-server start",
     "start": "yarn browser start",
     "start:external": "yarn browser start:external",
-    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs scripts/test-cli-decompress.cjs scripts/test-cli-matching.cjs scripts/test-cli-remaining.cjs && node scripts/test-studio-security.cjs",
+    "test:security": "node --test scripts/test-sanitizer-backport.cjs scripts/test-cli-tooling.cjs scripts/test-cli-decompress.cjs scripts/test-cli-matching.cjs scripts/test-cli-remaining.cjs scripts/test-deepmerge.cjs && node scripts/test-studio-security.cjs",
     "watch": "concurrently --kill-others -n tsc,browser,server -c red,yellow \"tsc -b -w --preserveWatchOutput\" \"yarn -s browser watch\" \"yarn -s server watch:bundle\""
   },
   "resolutions": {
